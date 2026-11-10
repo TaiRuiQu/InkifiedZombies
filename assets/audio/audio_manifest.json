@@ -1,0 +1,1333 @@
+{
+  "composition": {
+    "bpm": 80,
+    "bars": 16,
+    "seconds": 48.0,
+    "key": "D minor pentatonic",
+    "copyright": "Original synthesized composition and sound effects for Ink Tide; no external audio samples"
+  },
+  "files": {
+    "assets/audio/sfx/pistol_1.wav": {
+      "seconds": 0.54,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.85,
+      "rms": 0.08516,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/pistol_2.wav": {
+      "seconds": 0.54,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.85,
+      "rms": 0.07704,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/pistol_3.wav": {
+      "seconds": 0.54,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.85,
+      "rms": 0.08548,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/shotgun_1.wav": {
+      "seconds": 0.92,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.85,
+      "rms": 0.092,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/shotgun_2.wav": {
+      "seconds": 0.92,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.85,
+      "rms": 0.07751,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/shotgun_3.wav": {
+      "seconds": 0.92,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.85,
+      "rms": 0.10282,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/smg_1.wav": {
+      "seconds": 0.25,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.73,
+      "rms": 0.10073,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/smg_2.wav": {
+      "seconds": 0.25,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.73,
+      "rms": 0.10259,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/smg_3.wav": {
+      "seconds": 0.25,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.73,
+      "rms": 0.11138,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/rifle_1.wav": {
+      "seconds": 0.82,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.85,
+      "rms": 0.07325,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/rifle_2.wav": {
+      "seconds": 0.82,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.85,
+      "rms": 0.07588,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/rifle_3.wav": {
+      "seconds": 0.82,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.85,
+      "rms": 0.06847,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/launcher_1.wav": {
+      "seconds": 0.85,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.85,
+      "rms": 0.12088,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/launcher_2.wav": {
+      "seconds": 0.85,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.85,
+      "rms": 0.11572,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/launcher_3.wav": {
+      "seconds": 0.85,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.85,
+      "rms": 0.11353,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/crossbow_1.wav": {
+      "seconds": 0.64,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.85,
+      "rms": 0.09255,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/crossbow_2.wav": {
+      "seconds": 0.64,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.85,
+      "rms": 0.06916,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/crossbow_3.wav": {
+      "seconds": 0.64,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.85,
+      "rms": 0.10302,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/hit_flesh_1.wav": {
+      "seconds": 0.26,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.09817,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/hit_flesh_2.wav": {
+      "seconds": 0.26,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.08604,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/hit_flesh_3.wav": {
+      "seconds": 0.26,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.09989,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/hit_armor_1.wav": {
+      "seconds": 0.43,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.06465,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/hit_armor_2.wav": {
+      "seconds": 0.43,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.0692,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/hit_armor_3.wav": {
+      "seconds": 0.43,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.0663,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/hurt_flesh_1.wav": {
+      "seconds": 0.48,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.74,
+      "rms": 0.0839,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/hurt_flesh_2.wav": {
+      "seconds": 0.48,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.74,
+      "rms": 0.11245,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/hurt_flesh_3.wav": {
+      "seconds": 0.48,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.74,
+      "rms": 0.0983,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/headshot_1.wav": {
+      "seconds": 0.27,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.0784,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/headshot_2.wav": {
+      "seconds": 0.27,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.0875,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/kill_confirm_1.wav": {
+      "seconds": 0.54,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.07023,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/kill_confirm_2.wav": {
+      "seconds": 0.54,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.07295,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/hurt_shield_1.wav": {
+      "seconds": 0.45,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.74,
+      "rms": 0.07758,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/hurt_shield_2.wav": {
+      "seconds": 0.45,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.74,
+      "rms": 0.06816,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/melee_hit_1.wav": {
+      "seconds": 0.34,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.09035,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/melee_hit_2.wav": {
+      "seconds": 0.34,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.08331,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_hit_1.wav": {
+      "seconds": 0.34,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.08245,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_hit_2.wav": {
+      "seconds": 0.34,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.08643,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/impact_1.wav": {
+      "seconds": 0.28,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.08336,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/impact_2.wav": {
+      "seconds": 0.28,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.09657,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/shield_break_1.wav": {
+      "seconds": 0.85,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.06539,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/shield_break_2.wav": {
+      "seconds": 0.85,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.65,
+      "rms": 0.06492,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/reload_eject_1.wav": {
+      "seconds": 0.28,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.03745,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/reload_eject_2.wav": {
+      "seconds": 0.28,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.05718,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/reload_eject_3.wav": {
+      "seconds": 0.28,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.05725,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/reload_insert_1.wav": {
+      "seconds": 0.32,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.05711,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/reload_insert_2.wav": {
+      "seconds": 0.32,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.06818,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/reload_insert_3.wav": {
+      "seconds": 0.32,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.06208,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/reload_bolt_1.wav": {
+      "seconds": 0.27,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.04977,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/reload_bolt_2.wav": {
+      "seconds": 0.27,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.05614,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/reload_bolt_3.wav": {
+      "seconds": 0.27,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.05346,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/reload_start_1.wav": {
+      "seconds": 0.45,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.0543,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/reload_start_2.wav": {
+      "seconds": 0.45,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.0536,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/reload_start_3.wav": {
+      "seconds": 0.45,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.04848,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/reload_end_1.wav": {
+      "seconds": 0.3,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.03893,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/reload_end_2.wav": {
+      "seconds": 0.3,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.05784,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/reload_end_3.wav": {
+      "seconds": 0.3,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.05598,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/equip_1.wav": {
+      "seconds": 0.33,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.05483,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/equip_2.wav": {
+      "seconds": 0.33,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.04635,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/equip_3.wav": {
+      "seconds": 0.33,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.05662,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/empty_1.wav": {
+      "seconds": 0.08,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.06516,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/empty_2.wav": {
+      "seconds": 0.08,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.07347,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/empty_3.wav": {
+      "seconds": 0.08,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.07601,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/casing_1.wav": {
+      "seconds": 0.45,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.07056,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/casing_2.wav": {
+      "seconds": 0.45,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.06828,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/casing_3.wav": {
+      "seconds": 0.45,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.06829,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/step_stone_1.wav": {
+      "seconds": 0.22,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.42,
+      "rms": 0.05947,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/step_stone_2.wav": {
+      "seconds": 0.22,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.42,
+      "rms": 0.05788,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/step_stone_3.wav": {
+      "seconds": 0.22,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.42,
+      "rms": 0.06589,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/step_stone_4.wav": {
+      "seconds": 0.22,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.42,
+      "rms": 0.06659,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/step_paper_1.wav": {
+      "seconds": 0.26,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.42,
+      "rms": 0.07144,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/step_paper_2.wav": {
+      "seconds": 0.26,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.42,
+      "rms": 0.05636,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/step_paper_3.wav": {
+      "seconds": 0.26,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.42,
+      "rms": 0.07608,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/step_paper_4.wav": {
+      "seconds": 0.26,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.42,
+      "rms": 0.07341,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/step_1.wav": {
+      "seconds": 0.22,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.42,
+      "rms": 0.05877,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/step_2.wav": {
+      "seconds": 0.22,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.42,
+      "rms": 0.05613,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/step_3.wav": {
+      "seconds": 0.22,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.42,
+      "rms": 0.06556,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/step_4.wav": {
+      "seconds": 0.22,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.42,
+      "rms": 0.06811,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/land_1.wav": {
+      "seconds": 0.4,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.06806,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/land_2.wav": {
+      "seconds": 0.4,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.0758,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/hover_1.wav": {
+      "seconds": 0.06,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.07185,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/hover_2.wav": {
+      "seconds": 0.06,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.07764,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/click_1.wav": {
+      "seconds": 0.09,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.06212,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/click_2.wav": {
+      "seconds": 0.09,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.54,
+      "rms": 0.08248,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/pickup_1.wav": {
+      "seconds": 0.65,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.21938,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/upgrade_1.wav": {
+      "seconds": 2.4,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.15303,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/wave_start_1.wav": {
+      "seconds": 1.5,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.11369,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/wave_clear_1.wav": {
+      "seconds": 2.5,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.14994,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/boss_spawn_1.wav": {
+      "seconds": 2.6,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.06869,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/boss_roar_1.wav": {
+      "seconds": 2.1,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.21831,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/boss_death_1.wav": {
+      "seconds": 3.0,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.08696,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_windup_1.wav": {
+      "seconds": 0.55,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.2875,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/swipe_1.wav": {
+      "seconds": 0.3,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.19232,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/slam_1.wav": {
+      "seconds": 1.1,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.11211,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/explosion_1.wav": {
+      "seconds": 1.45,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.11787,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/lantern_fuse_1.wav": {
+      "seconds": 1.0,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.18493,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/spawn_1.wav": {
+      "seconds": 0.65,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.45,
+      "rms": 0.10486,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/dash_1.wav": {
+      "seconds": 0.42,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.20716,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/nova_1.wav": {
+      "seconds": 1.7,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.08241,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/talisman_1.wav": {
+      "seconds": 0.65,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.17658,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/zap_1.wav": {
+      "seconds": 0.45,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.11695,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/player_death_1.wav": {
+      "seconds": 3.0,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.05856,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/revive_1.wav": {
+      "seconds": 1.9,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.72,
+      "rms": 0.17199,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/heartbeat_1.wav": {
+      "seconds": 0.95,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.45,
+      "rms": 0.09233,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_wraith_1.wav": {
+      "seconds": 1.055,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.69,
+      "rms": 0.1412,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_wraith_2.wav": {
+      "seconds": 1.125,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.69,
+      "rms": 0.15627,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_puppet_1.wav": {
+      "seconds": 0.785,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.58,
+      "rms": 0.11119,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_puppet_2.wav": {
+      "seconds": 0.855,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.58,
+      "rms": 0.10126,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_brute_1.wav": {
+      "seconds": 1.135,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.73,
+      "rms": 0.14734,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_brute_2.wav": {
+      "seconds": 1.205,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.73,
+      "rms": 0.15226,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_mask_1.wav": {
+      "seconds": 1.175,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.63,
+      "rms": 0.16575,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_mask_2.wav": {
+      "seconds": 1.245,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.63,
+      "rms": 0.17056,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_lantern_1.wav": {
+      "seconds": 0.955,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.64,
+      "rms": 0.14072,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_lantern_2.wav": {
+      "seconds": 1.025,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.64,
+      "rms": 0.11543,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/music/menu.wav": {
+      "seconds": 48.0,
+      "rate": 22050,
+      "channels": 2,
+      "peak": 0.38,
+      "rms": 0.10224,
+      "loop": true,
+      "seam": 0.0
+    },
+    "assets/audio/music/melody.wav": {
+      "seconds": 48.0,
+      "rate": 22050,
+      "channels": 2,
+      "peak": 0.4,
+      "rms": 0.08723,
+      "loop": true,
+      "seam": 0.0
+    },
+    "assets/audio/music/strings.wav": {
+      "seconds": 48.0,
+      "rate": 22050,
+      "channels": 2,
+      "peak": 0.24,
+      "rms": 0.0927,
+      "loop": true,
+      "seam": 0.0
+    },
+    "assets/audio/music/drums.wav": {
+      "seconds": 48.0,
+      "rate": 22050,
+      "channels": 2,
+      "peak": 0.55,
+      "rms": 0.08542,
+      "loop": true,
+      "seam": 0.0
+    },
+    "assets/audio/music/boss.wav": {
+      "seconds": 48.0,
+      "rate": 22050,
+      "channels": 2,
+      "peak": 0.48,
+      "rms": 0.09474,
+      "loop": true,
+      "seam": 0.0
+    },
+    "assets/audio/music/ambience.wav": {
+      "seconds": 48.0,
+      "rate": 22050,
+      "channels": 2,
+      "peak": 0.18,
+      "rms": 0.04047,
+      "loop": true,
+      "seam": 0.0
+    },
+    "assets/audio/previews/battle_mix.wav": {
+      "seconds": 10.0,
+      "rate": 22050,
+      "channels": 2,
+      "peak": 0.89,
+      "rms": 0.16914,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_wraith_3.wav": {
+      "seconds": 1.165,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.69,
+      "rms": 0.13329,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_wraith_1.wav": {
+      "seconds": 0.32,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.55,
+      "rms": 0.11851,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_wraith_2.wav": {
+      "seconds": 0.34,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.55,
+      "rms": 0.11721,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_wraith_3.wav": {
+      "seconds": 0.365,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.55,
+      "rms": 0.10472,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_puppet_3.wav": {
+      "seconds": 0.895,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.58,
+      "rms": 0.10314,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_puppet_1.wav": {
+      "seconds": 0.23,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.48,
+      "rms": 0.06816,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_puppet_2.wav": {
+      "seconds": 0.25,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.48,
+      "rms": 0.06675,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_puppet_3.wav": {
+      "seconds": 0.275,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.48,
+      "rms": 0.06014,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_brute_3.wav": {
+      "seconds": 1.245,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.73,
+      "rms": 0.11701,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_brute_1.wav": {
+      "seconds": 0.4,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.66,
+      "rms": 0.10175,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_brute_2.wav": {
+      "seconds": 0.42,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.66,
+      "rms": 0.11254,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_brute_3.wav": {
+      "seconds": 0.445,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.66,
+      "rms": 0.10999,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_mask_3.wav": {
+      "seconds": 1.285,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.63,
+      "rms": 0.16717,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_mask_1.wav": {
+      "seconds": 0.3,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.34,
+      "rms": 0.08382,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_mask_2.wav": {
+      "seconds": 0.32,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.34,
+      "rms": 0.08468,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_mask_3.wav": {
+      "seconds": 0.345,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.34,
+      "rms": 0.07714,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_lantern_3.wav": {
+      "seconds": 1.065,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.64,
+      "rms": 0.12818,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_lantern_1.wav": {
+      "seconds": 0.36,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.4,
+      "rms": 0.09537,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_lantern_2.wav": {
+      "seconds": 0.38,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.4,
+      "rms": 0.11564,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_lantern_3.wav": {
+      "seconds": 0.405,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.4,
+      "rms": 0.10269,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_boss_1.wav": {
+      "seconds": 1.345,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.77,
+      "rms": 0.11206,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_boss_2.wav": {
+      "seconds": 1.415,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.77,
+      "rms": 0.13924,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_boss_3.wav": {
+      "seconds": 1.455,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.77,
+      "rms": 0.09684,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_boss_1.wav": {
+      "seconds": 0.44,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.7,
+      "rms": 0.12252,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_boss_2.wav": {
+      "seconds": 0.46,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.7,
+      "rms": 0.12528,
+      "loop": false,
+      "seam": 0.0
+    },
+    "assets/audio/sfx/enemy_step_boss_3.wav": {
+      "seconds": 0.485,
+      "rate": 44100,
+      "channels": 1,
+      "peak": 0.7,
+      "rms": 0.11426,
+      "loop": false,
+      "seam": 0.0
+    }
+  },
+  "enemy_audio": {
+    "revision": 1,
+    "recordings": 36,
+    "variants_per_event": 3,
+    "spatial_format": "mono PCM16 / 44100 Hz",
+    "movement_note": "mask and lantern use cloth/chain movement cues, not grounded footfalls",
+    "original_non_enemy_files_unchanged": 110
+  }
+}

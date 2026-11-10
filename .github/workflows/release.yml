@@ -1,0 +1,166 @@
+name: Build release
+
+on:
+  push:
+    tags: ["v*"]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to publish; leave blank for build artifacts only
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+# A tag push and a published Release can refer to the same version. Serialize
+# them, and make attachment uploads idempotent instead of cancelling a build.
+concurrency:
+  group: release-${{ github.event.release.tag_name || inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  version:
+    name: Validate version and source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      commit: ${{ steps.version.outputs.commit }}
+      publish: ${{ steps.version.outputs.publish }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag || github.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate tag equals project version
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name) || '' }}
+        run: python tools/ci/release_metadata.py --tag "$RELEASE_TAG"
+
+  checks:
+    name: Release checks
+    uses: ./.github/workflows/checks.yml
+    with:
+      ref: ${{ github.event.release.tag_name || inputs.tag || github.ref }}
+
+  clients:
+    name: Client (${{ matrix.platform }})
+    needs: [version, checks]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows
+            os: windows-latest
+            engine: .ci/godot/godot.exe
+          - platform: linux
+            os: ubuntu-24.04
+            engine: .ci/godot/godot
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.version.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Install verified editor and native release templates
+        shell: bash
+        run: python tools/ci/install_godot.py --version "$(cat .github/godot-version)" --destination .ci/godot --templates
+      - name: Export and smoke-test native client
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+          RELEASE_PLATFORM: ${{ matrix.platform }}
+          GODOT_BINARY: ${{ matrix.engine }}
+        shell: bash
+        run: python tools/ci/build_client.py --godot "$GODOT_BINARY" --platform "$RELEASE_PLATFORM" --version "$RELEASE_VERSION" --output dist/release
+      - name: Preserve export and runtime logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: client-logs-${{ matrix.platform }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dist/release/logs/
+          if-no-files-found: ignore
+          retention-days: 14
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-client-${{ matrix.platform }}
+          path: |
+            dist/release/*.zip
+            dist/release/*.tar.gz
+            dist/release/*.sha256.txt
+          if-no-files-found: error
+          compression-level: 0
+
+  relays:
+    name: Relay package (${{ matrix.platform }})
+    needs: [version, checks]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows
+            os: windows-latest
+          - platform: linux
+            os: ubuntu-24.04
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.version.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: server/go.mod
+          check-latest: true
+          cache-dependency-path: server/go.sum
+      - name: Build and health-check relay
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+          RELEASE_PLATFORM: ${{ matrix.platform }}
+        shell: bash
+        run: python tools/ci/build_relay.py --platform "$RELEASE_PLATFORM" --version "$RELEASE_VERSION" --output dist/release
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-relay-${{ matrix.platform }}
+          path: |
+            dist/release/*.zip
+            dist/release/*.tar.gz
+            dist/release/*.sha256.txt
+          if-no-files-found: error
+          compression-level: 0
+
+  publish:
+    name: Attach complete packages to GitHub Release
+    needs: [version, clients, relays]
+    if: needs.version.outputs.publish == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.version.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: dist/release
+      - name: Verify checksums and upload all four packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.version.outputs.tag }}
+        run: python tools/ci/publish_release.py --tag "$RELEASE_TAG" --directory dist/release

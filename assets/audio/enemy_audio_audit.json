@@ -1,0 +1,366 @@
+{
+  "status": "PASS",
+  "recordings": 36,
+  "rows": [
+    {
+      "event": "enemy_wraith",
+      "variant": 1,
+      "seconds": 1.055,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1412,
+      "peak": 0.69,
+      "spectral_centroid_hz": 1982.8
+    },
+    {
+      "event": "enemy_wraith",
+      "variant": 2,
+      "seconds": 1.125,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1563,
+      "peak": 0.69,
+      "spectral_centroid_hz": 1948.9
+    },
+    {
+      "event": "enemy_wraith",
+      "variant": 3,
+      "seconds": 1.165,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1333,
+      "peak": 0.69,
+      "spectral_centroid_hz": 1939.3
+    },
+    {
+      "event": "enemy_step_wraith",
+      "variant": 1,
+      "seconds": 0.32,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1185,
+      "peak": 0.55,
+      "spectral_centroid_hz": 1197.4
+    },
+    {
+      "event": "enemy_step_wraith",
+      "variant": 2,
+      "seconds": 0.34,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1172,
+      "peak": 0.55,
+      "spectral_centroid_hz": 1213.3
+    },
+    {
+      "event": "enemy_step_wraith",
+      "variant": 3,
+      "seconds": 0.365,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1047,
+      "peak": 0.55,
+      "spectral_centroid_hz": 1212.7
+    },
+    {
+      "event": "enemy_puppet",
+      "variant": 1,
+      "seconds": 0.785,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1112,
+      "peak": 0.58,
+      "spectral_centroid_hz": 3731.8
+    },
+    {
+      "event": "enemy_puppet",
+      "variant": 2,
+      "seconds": 0.855,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1013,
+      "peak": 0.58,
+      "spectral_centroid_hz": 3728.8
+    },
+    {
+      "event": "enemy_puppet",
+      "variant": 3,
+      "seconds": 0.895,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1031,
+      "peak": 0.58,
+      "spectral_centroid_hz": 3724.3
+    },
+    {
+      "event": "enemy_step_puppet",
+      "variant": 1,
+      "seconds": 0.23,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.0682,
+      "peak": 0.48,
+      "spectral_centroid_hz": 5558.6
+    },
+    {
+      "event": "enemy_step_puppet",
+      "variant": 2,
+      "seconds": 0.25,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.0668,
+      "peak": 0.48,
+      "spectral_centroid_hz": 5520.3
+    },
+    {
+      "event": "enemy_step_puppet",
+      "variant": 3,
+      "seconds": 0.275,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.0601,
+      "peak": 0.48,
+      "spectral_centroid_hz": 5485.7
+    },
+    {
+      "event": "enemy_brute",
+      "variant": 1,
+      "seconds": 1.135,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1473,
+      "peak": 0.73,
+      "spectral_centroid_hz": 1062.1
+    },
+    {
+      "event": "enemy_brute",
+      "variant": 2,
+      "seconds": 1.205,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1523,
+      "peak": 0.73,
+      "spectral_centroid_hz": 1027.7
+    },
+    {
+      "event": "enemy_brute",
+      "variant": 3,
+      "seconds": 1.245,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.117,
+      "peak": 0.73,
+      "spectral_centroid_hz": 1018.2
+    },
+    {
+      "event": "enemy_step_brute",
+      "variant": 1,
+      "seconds": 0.4,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1017,
+      "peak": 0.66,
+      "spectral_centroid_hz": 692.2
+    },
+    {
+      "event": "enemy_step_brute",
+      "variant": 2,
+      "seconds": 0.42,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1125,
+      "peak": 0.66,
+      "spectral_centroid_hz": 696.3
+    },
+    {
+      "event": "enemy_step_brute",
+      "variant": 3,
+      "seconds": 0.445,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.11,
+      "peak": 0.66,
+      "spectral_centroid_hz": 632.5
+    },
+    {
+      "event": "enemy_mask",
+      "variant": 1,
+      "seconds": 1.175,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1658,
+      "peak": 0.63,
+      "spectral_centroid_hz": 2755.4
+    },
+    {
+      "event": "enemy_mask",
+      "variant": 2,
+      "seconds": 1.245,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1706,
+      "peak": 0.63,
+      "spectral_centroid_hz": 2760.6
+    },
+    {
+      "event": "enemy_mask",
+      "variant": 3,
+      "seconds": 1.285,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1672,
+      "peak": 0.63,
+      "spectral_centroid_hz": 2801.8
+    },
+    {
+      "event": "enemy_step_mask",
+      "variant": 1,
+      "seconds": 0.3,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.0838,
+      "peak": 0.34,
+      "spectral_centroid_hz": 2648.2
+    },
+    {
+      "event": "enemy_step_mask",
+      "variant": 2,
+      "seconds": 0.32,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.0847,
+      "peak": 0.34,
+      "spectral_centroid_hz": 2596.6
+    },
+    {
+      "event": "enemy_step_mask",
+      "variant": 3,
+      "seconds": 0.345,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.0771,
+      "peak": 0.34,
+      "spectral_centroid_hz": 2656.4
+    },
+    {
+      "event": "enemy_lantern",
+      "variant": 1,
+      "seconds": 0.955,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1407,
+      "peak": 0.64,
+      "spectral_centroid_hz": 1570.3
+    },
+    {
+      "event": "enemy_lantern",
+      "variant": 2,
+      "seconds": 1.025,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1154,
+      "peak": 0.64,
+      "spectral_centroid_hz": 1565.0
+    },
+    {
+      "event": "enemy_lantern",
+      "variant": 3,
+      "seconds": 1.065,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1282,
+      "peak": 0.64,
+      "spectral_centroid_hz": 1582.7
+    },
+    {
+      "event": "enemy_step_lantern",
+      "variant": 1,
+      "seconds": 0.36,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.0954,
+      "peak": 0.4,
+      "spectral_centroid_hz": 1578.4
+    },
+    {
+      "event": "enemy_step_lantern",
+      "variant": 2,
+      "seconds": 0.38,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1156,
+      "peak": 0.4,
+      "spectral_centroid_hz": 1599.4
+    },
+    {
+      "event": "enemy_step_lantern",
+      "variant": 3,
+      "seconds": 0.405,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1027,
+      "peak": 0.4,
+      "spectral_centroid_hz": 1634.8
+    },
+    {
+      "event": "enemy_boss",
+      "variant": 1,
+      "seconds": 1.345,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1121,
+      "peak": 0.77,
+      "spectral_centroid_hz": 1110.8
+    },
+    {
+      "event": "enemy_boss",
+      "variant": 2,
+      "seconds": 1.415,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1392,
+      "peak": 0.77,
+      "spectral_centroid_hz": 1133.1
+    },
+    {
+      "event": "enemy_boss",
+      "variant": 3,
+      "seconds": 1.455,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.0968,
+      "peak": 0.77,
+      "spectral_centroid_hz": 1081.7
+    },
+    {
+      "event": "enemy_step_boss",
+      "variant": 1,
+      "seconds": 0.44,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1225,
+      "peak": 0.7,
+      "spectral_centroid_hz": 534.7
+    },
+    {
+      "event": "enemy_step_boss",
+      "variant": 2,
+      "seconds": 0.46,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1253,
+      "peak": 0.7,
+      "spectral_centroid_hz": 506.5
+    },
+    {
+      "event": "enemy_step_boss",
+      "variant": 3,
+      "seconds": 0.485,
+      "channels": 1,
+      "rate": 44100,
+      "rms": 0.1143,
+      "peak": 0.7,
+      "spectral_centroid_hz": 594.7
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+# Godot import/cache
+.godot/
+# Generated dev screenshots
+dev_shots/
+*.tmp
+*.translation
+
+# Build output
+build/
+export/
+/dist/
+/server/.tools/
+/.ci/
+*.pck
+*.exe
+*.dmg
+*.zip
+
+# Local configuration and Python tooling cache
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]

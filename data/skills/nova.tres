@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SkillDefinition" load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/skills/skill_definition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/skills/nova.gd" id="2"]
+[resource]
+script = ExtResource("1")
+id = "nova"
+display_name = "墨爆"
+icon = "爆"
+input_action = "skill"
+cooldown = 8.0
+effect = ExtResource("2")
