@@ -50,6 +50,7 @@ var _spawn_tween: Tween
 var _steering: RefCounted = SteeringScript.new()
 var _custom_behavior: RefCounted
 var _target_timer := 0.0
+var entry_target := Vector3.INF
 var _hit_react_timer := 0.0
 var _hit_react_duration := 0.20
 var _hit_react_direction := Vector3.ZERO
@@ -310,6 +311,13 @@ func _physics_process(delta: float) -> void:
 		_apply_gravity(delta)
 		move_and_slide()
 		return
+	if entry_target != Vector3.INF:
+		var approach := entry_target - global_position
+		approach.y = 0.0
+		if approach.length() > 0.8:
+			_move(approach.normalized(), speed, delta)
+			return
+		entry_target = Vector3.INF
 
 	_target_timer -= delta
 	if _target_timer <= 0.0 or not _player_valid():
@@ -531,9 +539,10 @@ func _enrage() -> void:
 	for i in 4:
 		var e = preload("res://scenes/enemy.tscn").instantiate()
 		e.setup("puppet", wave_level, false)
-		var ang := TAU * float(i) / 4.0 + 0.4
-		var spawn := global_position + Vector3(cos(ang) * 2.6, 0.1, sin(ang) * 2.6)
+		var ang := TAU * float(i) / 4.0
+		var spawn := Vector3(cos(ang), 0, sin(ang)) * MapBuilder.SPAWN_RADIUS + Vector3.UP * 0.1
 		e.position = get_parent().to_local(spawn)
+		e.entry_target = Vector3(cos(ang), 0, sin(ang)) * (MapBuilder.GATE_RADIUS - 2.5)
 		get_parent().add_child(e)
 
 

@@ -53,9 +53,13 @@ static func cast(id: String, player: Node3D) -> bool:
 		Coop.request_action("skill", {"id": id})
 		if id == "dash":
 			definition.effect.call("cast", player)
-		else:
-			VFX.ring(player.get_parent(), player.global_position, 3.5, Ink.INDIGO_LIGHT, 0.4)
 	else:
 		definition.effect.call("cast", player)
+	var direction: Vector3 = player.dash_dir if id == "dash" else -player.camera.global_transform.basis.z
+	var radius := float(player.mods.get("nova_radius", 6.0))
+	VFX.skill_cast(player.get_parent(), id, player.global_position, direction, radius)
+	if NET.active and NET.is_host:
+		NET.send("skill_fx", {"owner": int(player.get_meta("peer_id", NET.local_id)), "id": id,
+			"position": Coop._pack(player.global_position), "direction": Coop._pack(direction), "radius": radius})
 	player.stats_changed.emit()
 	return true

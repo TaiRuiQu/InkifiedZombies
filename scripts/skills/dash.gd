@@ -11,5 +11,4 @@ static func cast(player: Node3D) -> void:
 	player._dash_damage_done = false
 	player.invuln_time = maxf(player.invuln_time, 0.3)
 	player.add_trauma(0.16)
-	VFX.burst(player.get_parent(), player.global_position + Vector3(0, 0.8, 0), Ink.INK, 18, 4.0, 0.16, 0.5, Vector3(0, -2, 0))
 	Sfx.play("dash", -2.0)

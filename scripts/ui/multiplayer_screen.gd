@@ -36,6 +36,7 @@ func _ready() -> void:
 	NET.connected.connect(_on_connected)
 	NET.failed.connect(_on_failed)
 	NET.roster_changed.connect(_refresh)
+	NET.latency_updated.connect(_refresh)
 	NET.peer_joined.connect(_on_peer_changed)
 	NET.peer_left.connect(_on_peer_changed)
 
@@ -417,9 +418,12 @@ func _refresh() -> void:
 			_session.text = "中转 · 房间 %s\n%s" % [NET.room_code, NET.address]
 		else:
 			_session.text = "直连 · %s\n%d 位守夜人" % [NET.address, NET.peers.size()]
+		_session.text += " · " + NET.connection_latency_text()
 	else:
 		_session.text = "正在连接…" if locked else "尚未加入房间"
 	var roster_signature: String = JSON.stringify(NET.peers) + str(NET.local_id)
+	for id in NET.peers:
+		roster_signature += "|%d:%d" % [int(id), NET.latency_ms(int(id))]
 	if roster_signature == _last_roster:
 		return
 	_last_roster = roster_signature
@@ -436,6 +440,8 @@ func _refresh() -> void:
 		var suffix: String = " · 房主" if int(peer_id) == NET.host_id else ""
 		if int(peer_id) == NET.local_id:
 			suffix += " · 你"
+		elif NET.is_host or int(peer_id) == NET.host_id:
+			suffix += " · " + NET.latency_text(int(peer_id))
 		var name_label := UITheme.body(String(peer.get("name", "守墨人")) + suffix, 15)
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS

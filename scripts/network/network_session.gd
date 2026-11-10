@@ -9,12 +9,15 @@ signal connected
 signal failed(reason: String)
 signal disconnected(reason: String)
 signal roster_changed
+signal latency_updated
 
 const MAX_PLAYERS := 4
 const MAX_PACKET_BYTES := 262144
 const CONNECT_TIMEOUT := 12.0
 const DIRECT_PORT := 7777
 const RELAY_PORT := 7778
+const PING_INTERVAL := 1.0
+const PING_TIMEOUT := 5.0
 
 var active := false
 var connecting := false
@@ -35,6 +38,10 @@ var _relay_auth: Dictionary = {}
 var _pending: Dictionary = {}
 var _rates: Dictionary = {}
 var _direct_events: Array[Dictionary] = []
+var _ping_timer := 0.0
+var _ping_sequence := 0
+var _pings: Dictionary = {}
+var _latencies: Dictionary = {}
 
 
 func _ready() -> void:
@@ -117,11 +124,16 @@ func _begin_relay(server_address: String, room: String, password: String,
 	return OK
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _direct:
 		_poll_direct()
 	if _relay:
 		_poll_relay()
+	if active:
+		_ping_timer -= delta
+		if _ping_timer <= 0.0:
+			_ping_timer = PING_INTERVAL
+			_poll_latency()
 	if connecting and _now() - _started_at > CONNECT_TIMEOUT:
 		_fail("连接超时，请检查 IP、端口、防火墙及服务器状态。")
 	if is_host and _direct:
@@ -359,6 +371,20 @@ func _receive_payload(sender: int, raw_payload: Variant) -> void:
 	var data: Dictionary = payload.data
 	if kind.is_empty() or kind.length() > 64:
 		return
+	if kind == "_ping":
+		var sequence := _wire_id(data.get("sequence", -1))
+		if sequence >= 0:
+			send("_pong", {"sequence": sequence}, sender)
+		return
+	if kind == "_pong":
+		var sequence := _wire_id(data.get("sequence", -1))
+		var pending_ping: Dictionary = _pings.get(sender, {})
+		if pending_ping.get("sequence", -2) == sequence:
+			var sample := maxf(0.0, float(Time.get_ticks_usec() - int(pending_ping.sent)) / 1000.0)
+			_latencies[sender] = {"ms": sample, "at": _now()}
+			_pings.erase(sender)
+			latency_updated.emit()
+		return
 	if is_host and kind == "ready":
 		peers[sender]["ready"] = bool(data.get("ready", false))
 		_broadcast_roster()
@@ -372,6 +398,51 @@ func _receive_payload(sender: int, raw_payload: Variant) -> void:
 		roster_changed.emit()
 		return
 	message_received.emit(sender, kind, data)
+
+
+func _poll_latency() -> void:
+	for id in _pings.keys():
+		if not peers.has(id):
+			_pings.erase(id)
+	for id in _latencies.keys():
+		if not peers.has(id):
+			_latencies.erase(id)
+	for id in peers:
+		if int(id) == local_id or (not is_host and int(id) != host_id):
+			continue
+		var pending_ping: Dictionary = _pings.get(id, {})
+		if not pending_ping.is_empty() and float(Time.get_ticks_usec() - int(pending_ping.sent)) / 1000000.0 < PING_TIMEOUT:
+			continue
+		_ping_sequence = (_ping_sequence + 1) % 2147483647
+		_pings[id] = {"sequence": _ping_sequence, "sent": Time.get_ticks_usec()}
+		if send("_ping", {"sequence": _ping_sequence}, int(id)) != OK:
+			_pings.erase(id)
+	latency_updated.emit()
+
+
+func latency_ms(id: int) -> int:
+	var sample: Dictionary = _latencies.get(id, {})
+	if sample.is_empty() or not peers.has(id) or _now() - float(sample.at) > PING_TIMEOUT:
+		return -1
+	return maxi(1, roundi(float(sample.ms)))
+
+
+func latency_text(id: int) -> String:
+	var milliseconds := latency_ms(id)
+	return "%d ms" % milliseconds if milliseconds >= 0 else "测量中…"
+
+
+func connection_latency_text() -> String:
+	if not active:
+		return ""
+	var transport := "中转" if mode == "relay" else "直连"
+	if not is_host:
+		return "%s · 连接延迟 %s" % [transport, latency_text(host_id)]
+	var highest := -1
+	for id in peers:
+		if int(id) != local_id:
+			highest = maxi(highest, latency_ms(int(id)))
+	return "%s · 队友延迟 %s" % [transport, "%d ms" % highest if highest >= 0 else ("测量中…" if peers.size() > 1 else "等待队友")]
 
 
 func set_ready(ready: bool) -> void:
@@ -455,6 +526,9 @@ func leave() -> void:
 	_rates.clear()
 	_direct_events.clear()
 	_relay_auth.clear()
+	_pings.clear()
+	_latencies.clear()
+	_ping_timer = 0.0
 	_hello_sent = false
 	is_host = false
 	local_id = 0

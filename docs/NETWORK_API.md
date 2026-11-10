@@ -13,6 +13,9 @@ send(kind: String, data: Dictionary, target: int = 0) -> Error
 set_ready(ready: bool)
 set_player_name(nickname: String)
 announce_start(data: Dictionary = {})
+latency_ms(id: int) -> int
+latency_text(id: int) -> String
+connection_latency_text() -> String
 leave()
 ```
 
@@ -29,12 +32,17 @@ NET.disconnected(reason: String)
 NET.peer_joined(id: int)
 NET.peer_left(id: int)
 NET.roster_changed
+NET.latency_updated
 NET.message_received(sender: int, kind: String, data: Dictionary)
 ```
 
 房主 `send(..., target=0)` 广播给所有远端；正整数 `target` 定向给一名队友。客户端所有发送均归到房主，不允许直接转发给其他客户端。发送不会回显给本机。业务层接收快照、开局、结算等指令时还应确认 `sender == NET.host_id`。
 
 `ready` 和 `name` 由 NET 在房主端更新名单，随后广播内部 `_roster` 消息；业务层不应自行构造 `_roster`。`announce_start` 只广播 `start`，实际本机开局由控制器负责。
+
+延迟使用应用层 `_ping` / `_pong` 测量真实往返时间，每秒一次，暂停选卡时仍工作；中转模式包含经中转到房主的完整往返。房主分别测量每位队友，HUD 显示最高队友延迟；客户端显示到房主的延迟。未测得或结果超过 5 秒时 `latency_ms` 返回 `-1`，界面显示「测量中…」。离开房间清空测量结果。
+
+波末客户端发送 `upgrade_refresh`，房主验证该玩家仍在选卡并扣除独立的三次额度，再以 `upgrade_refreshed` 返回卡牌和剩余次数。所有法术施放由房主广播 `skill_fx`，火符命中广播 `spell_impact`；这些消息只创建表现，伤害仍由房主判定。
 
 数据必须由 JSON 支持的字典、数组、字符串、数字、布尔或空值组成。`Vector3` 显式转为 `[x,y,z]`；不要直接发送节点、资源、`Vector2` 或 `Color`。较长生命周期的 64 位对象标识建议转字符串；当前 Node 实例 ID 在测试短局内保持在 JSON 双精度整数的精确范围内。
 
@@ -64,7 +72,7 @@ model.update_snapshot({
 model.play_shot()
 ```
 
-模型含插值、行走、六种远端枪型、分色衣饰、名字与血量、倒地姿势。它不参与物理和伤害；房主仍维护真正的 Player 权威角色。`update_snapshot` 也接受 `pos/p`、`hp/max_hp`、`current_weapon`、`firing/shot` 别名。
+模型含插值、行走、六种远端枪型、分色衣饰、名字与血、倒地姿势。它不参与物理和伤害；房主仍维护真正的 Player 权威角色。`update_snapshot` 也接受 `pos/p`、`hp/max_hp`、`current_weapon`、`firing/shot` 别名。
 
 ## 已执行验证
 

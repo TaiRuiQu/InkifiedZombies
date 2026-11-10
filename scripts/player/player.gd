@@ -14,7 +14,7 @@ const ProjectileScript: Script = preload("res://scripts/combat/projectile.gd")
 const WALK_SPEED := 5.7
 const SPRINT_SPEED := 8.7
 const CROUCH_SPEED := 3.1
-const JUMP_VELOCITY := 6.6
+const JUMP_VELOCITY := 8.5
 const GRAVITY := 22.0
 const MOUSE_SENS := 0.00215
 
@@ -102,7 +102,7 @@ func _ready() -> void:
 	add_to_group("player")
 	add_to_group("coop_players")
 	collision_layer = 2
-	collision_mask = 5
+	collision_mask = 5 | 64
 	floor_snap_length = 0.35
 	floor_max_angle = deg_to_rad(50.0)
 	_build_collision()

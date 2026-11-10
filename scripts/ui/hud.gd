@@ -210,7 +210,7 @@ func _process(delta: float) -> void:
 	_objective.text = "%s · %s\n%s" % [MapDB.get_map(Game.selected_map).display_name,
 		RunRules.difficulty(Game.difficulty).name, "无尽守夜 · 每五波迎战墨将" if Game.endless else "目标：肃清十波 · 第五 / 十波迎战墨将"]
 	_weapon_hint.text = "%s 近战 · %s 装填 · 滚轮 / 1–6 换枪" % [Settings.binding_text("melee"), Settings.binding_text("reload")]
-	_team.text = Coop.team_status() if NET.active else ""
+	_team.text = (Coop.team_status() + "\n" + NET.connection_latency_text()) if NET.active else ""
 
 
 

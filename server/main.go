@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var version = "0.2.0-beta"
+var version = "0.2.3"
 
 func main() {
 	addr := flag.String("addr", ":7778", "HTTP/WebSocket listen address")

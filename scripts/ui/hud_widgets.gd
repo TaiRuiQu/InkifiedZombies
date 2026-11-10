@@ -97,7 +97,7 @@ class HealthBar extends Control:
 	func _draw() -> void:
 		var rect := Rect2(0, 0, size.x, size.y)
 		UITheme.rough_rect(self, rect, Color(0.92, 0.89, 0.81, 0.93), UITheme.INK, 2.2, 4411, 2.0)
-		draw_string(UITheme.BRUSH, Vector2(14, 28), "气血", HORIZONTAL_ALIGNMENT_LEFT, -1, 23, UITheme.INK)
+		draw_string(UITheme.BRUSH, Vector2(14, 28), "血", HORIZONTAL_ALIGNMENT_LEFT, -1, 23, UITheme.INK)
 		draw_string(UITheme.BODY, Vector2(0, 25), "%d / %d" % [ceili(maxf(health, 0.0)), int(max_health)],
 			HORIZONTAL_ALIGNMENT_RIGHT, size.x - 14.0, 15, UITheme.INK_SOFT)
 		var bar := Rect2(14, 36, size.x - 28, 17)

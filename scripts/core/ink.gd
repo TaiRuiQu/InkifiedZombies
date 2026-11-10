@@ -26,6 +26,8 @@ const OCHRE_DARK := Color("7a5c33")
 const ASH := Color("736f64")
 const ASH_DARK := Color("4a4740")
 const GOLD := Color("c9a44f")
+const PLAYER_COAT := Color("28596d")
+const PLAYER_TRIMS := [Color("54bfc4"), Color("70a9e0"), Color("7ccab0"), Color("a199de")]
 
 static var _surfaces: Dictionary = {}
 static var _outlines: Dictionary = {}

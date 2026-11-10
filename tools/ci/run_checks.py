@@ -10,6 +10,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 ERROR = re.compile(r"^(?:SCRIPT ERROR:|ERROR:|.*\bFAIL(?:URE)?\b)", re.MULTILINE)
 TESTS = [
+    "tests/feedback_audit.gd",
     "tests/audio_audit.gd",
     "tests/interaction_audit.gd",
     "tests/enemy_hitbox_audit.gd",

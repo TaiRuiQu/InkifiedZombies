@@ -2,6 +2,9 @@ class_name UpgradeScreen
 extends CanvasLayer
 
 signal chosen(upgrade: Dictionary)
+signal refresh_requested
+
+const REFRESH_LIMIT := 3
 
 var _root: Control
 var _dim: ColorRect
@@ -10,6 +13,9 @@ var _title: Label
 var _sub: Label
 var _cards: Array[UpgradeCard] = []
 var _skip: InkButton
+var _refresh: InkButton
+var refreshes_left := REFRESH_LIMIT
+var _refresh_pending := false
 var _hint: Label
 var _choosing := false
 var _wave := 1
@@ -72,12 +78,19 @@ func _build() -> void:
 	_root.add_child(_sub)
 
 	_skip = InkButton.new()
-	_skip.text = "弃 · 回气三成"
-	_skip.position = Vector2(675, 760)
+	_skip.text = "弃 · 回血三成"
+	_skip.position = Vector2(825, 760)
 	_skip.size = Vector2(250, 48)
 	_skip.custom_minimum_size = Vector2(250, 48)
 	_skip.pressed.connect(_on_skip)
 	_root.add_child(_skip)
+	_refresh = InkButton.new()
+	_refresh.position = Vector2(525, 760)
+	_refresh.size = Vector2(250, 48)
+	_refresh.custom_minimum_size = Vector2(250, 48)
+	_refresh.accent = UITheme.INDIGO
+	_refresh.pressed.connect(_on_refresh)
+	_root.add_child(_refresh)
 	_hint = UITheme.body("按下 1 / 2 / 3 择之", 14, UITheme.PAPER_DARK)
 	_hint.add_theme_constant_override("outline_size", 5)
 	_hint.add_theme_color_override("font_outline_color", UITheme.INK)
@@ -90,18 +103,30 @@ func _build() -> void:
 func open(wave: int, choices: Array) -> void:
 	_cancel_pending_choice()
 	_wave = wave
+	refreshes_left = REFRESH_LIMIT
+	_refresh_pending = false
 	_choosing = false
 	visible = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_wave_label.text = "第 %s 波 · 肃清" % UITheme.cn_num(wave)
 	_title.text = "择 一 而 进"
 	_sub.text = "余下之路，由此笔定。"
-	_hint.text = "1 / 2 / 3 快选 · Tab / 方向键移笔 · Enter 择之"
+	_hint.text = "1 / 2 / 3 快选 · R 刷新 · Tab / 方向键移笔 · Enter 择之"
 	_skip.enabled = true
 	_skip.modulate.a = 1.0
+	_update_refresh()
+	_set_choices(choices)
+	_root.modulate.a = 0.0
+	_panel_tween = _root.create_tween()
+	_panel_tween.tween_property(_root, "modulate:a", 1.0, 0.22)
+	_focus_initial.call_deferred()
+
+
+func _set_choices(choices: Array) -> void:
 
 	for c in _cards:
 		if is_instance_valid(c):
+			c.lock()
 			c.queue_free()
 	_cards.clear()
 
@@ -123,10 +148,34 @@ func open(wave: int, choices: Array) -> void:
 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 	_wire_card_focus()
-	_root.modulate.a = 0.0
-	_panel_tween = _root.create_tween()
-	_panel_tween.tween_property(_root, "modulate:a", 1.0, 0.22)
 	_focus_initial.call_deferred()
+
+
+func _on_refresh() -> void:
+	if not visible or _choosing or _refresh_pending or refreshes_left <= 0:
+		return
+	_refresh_pending = true
+	_refresh.enabled = false
+	_skip.enabled = false
+	for card in _cards:
+		card.lock()
+	refresh_requested.emit()
+
+
+func apply_refresh(choices: Array, remaining: int) -> void:
+	if not visible or _choosing:
+		return
+	refreshes_left = clampi(remaining, 0, REFRESH_LIMIT)
+	_refresh_pending = false
+	_skip.enabled = true
+	_update_refresh()
+	_set_choices(choices)
+
+
+func _update_refresh() -> void:
+	_refresh.text = "刷新技能 · %d / %d" % [refreshes_left, REFRESH_LIMIT]
+	_refresh.enabled = refreshes_left > 0 and not _refresh_pending and not _choosing
+	_refresh.queue_redraw()
 
 
 func close() -> void:
@@ -139,17 +188,17 @@ func close() -> void:
 
 
 func _on_card_chosen(card: UpgradeCard, data: Dictionary) -> void:
-	if _choosing or not visible:
+	if _choosing or _refresh_pending or not visible:
 		return
 	_choose(data, card)
 
 
 func _on_skip() -> void:
-	if _choosing or not visible:
+	if _choosing or _refresh_pending or not visible:
 		return
 	var data := {
 		"id": "skip_heal", "name": "静心", "icon": "息", "rarity": 0, "tag": "护体",
-		"desc": "退一步，也是一种笔法。\n立即回复 30% 气血。",
+		"desc": "退一步，也是一种笔法。\n立即回复 30% 血。",
 		"effects": {"heal_percent": 0.3}, "max_stack": 99,
 	}
 	_choose(data, null)
@@ -158,11 +207,12 @@ func _on_skip() -> void:
 func _choose(data: Dictionary, card: UpgradeCard) -> void:
 	_choosing = true
 	_pending_choice = data.duplicate(true)
-	_title.text = "此 笔 已 定" if card != null else "静 心 回 气"
+	_title.text = "此 笔 已 定" if card != null else "静 心 回 血"
 	_sub.text = String(data.get("name", "静心"))
 	_hint.text = "凝墨成形，稍候再进。"
 	Sfx.play("upgrade", -1.0)
 	_skip.enabled = false
+	_refresh.enabled = false
 	for c in _cards:
 		if is_instance_valid(c):
 			c.lock(c == card)
@@ -205,13 +255,18 @@ func _wire_card_focus() -> void:
 	for index in _cards.size():
 		var card := _cards[index]
 		var previous: Control = _cards[index - 1] if index > 0 else _skip
-		var next: Control = _cards[index + 1] if index + 1 < _cards.size() else _skip
+		var next: Control = _cards[index + 1] if index + 1 < _cards.size() else (_refresh if _refresh.enabled else _skip)
 		card.focus_previous = card.get_path_to(previous)
 		card.focus_next = card.get_path_to(next)
 		card.focus_neighbor_left = card.get_path_to(previous)
 		card.focus_neighbor_right = card.get_path_to(next)
 		card.focus_neighbor_bottom = card.get_path_to(_skip)
-	_skip.focus_previous = _skip.get_path_to(_cards.back())
+	_refresh.focus_previous = _refresh.get_path_to(_cards.back())
+	_refresh.focus_next = _refresh.get_path_to(_skip)
+	_refresh.focus_neighbor_right = _refresh.get_path_to(_skip)
+	_refresh.focus_neighbor_top = _refresh.get_path_to(_cards.front())
+	_skip.focus_neighbor_left = _skip.get_path_to(_refresh if _refresh.enabled else _cards.back())
+	_skip.focus_previous = _skip.get_path_to(_refresh if _refresh.enabled else _cards.back())
 	_skip.focus_next = _skip.get_path_to(_cards.front())
 	_skip.focus_neighbor_top = _skip.get_path_to(_cards.front())
 
@@ -226,9 +281,13 @@ func _focus_initial() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if not visible or _choosing:
+	if not visible or _choosing or _refresh_pending:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_R:
+			_on_refresh()
+			get_viewport().set_input_as_handled()
+			return
 		var idx := -1
 		if event.keycode >= KEY_1 and event.keycode <= KEY_3:
 			idx = int(event.keycode - KEY_1)

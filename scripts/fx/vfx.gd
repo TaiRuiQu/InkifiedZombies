@@ -89,7 +89,7 @@ static func tracer(parent: Node3D, from: Vector3, to: Vector3, color: Color,
 		var up := Vector3.UP
 		if absf((to - from).normalized().y) > 0.98:
 			up = Vector3.RIGHT
-		mi.look_at(to, up)
+		mi.look_at(parent.to_global(to), parent.global_basis * up)
 	var tw := mi.create_tween()
 	tw.tween_property(mat, "albedo_color:a", 0.0, lifetime)
 	tw.tween_callback(mi.queue_free)
@@ -200,6 +200,116 @@ static func spawn_portal(parent: Node3D, pos: Vector3) -> void:
 	burst(parent, pos + Vector3(0, 0.2, 0), Color(0.12, 0.11, 0.1, 0.45), 20, 3.5, 0.22, 0.8, Vector3(0, -2, 0))
 	ring(parent, pos, 1.5, Ink.CINNABAR_DARK, 0.7, 0.55)
 	ring(parent, pos, 2.2, Color(0.1, 0.1, 0.1, 0.45), 0.9, 0.4)
+
+
+static func skill_cast(parent: Node3D, id: String, pos: Vector3,
+		direction: Vector3, radius: float = 6.0) -> void:
+	if not is_instance_valid(parent) or not parent.is_inside_tree():
+		return
+	var effect := Node3D.new()
+	effect.name = "SpellCast_" + id
+	effect.position = pos
+	parent.add_child(effect)
+	effect.add_to_group("spell_effects")
+	match id:
+		"nova":
+			# Transparent brush rings leave enemy silhouettes and warnings visible.
+			_spell_sigil(effect, radius * 0.72, Ink.PLAYER_TRIMS[0], "墨", 0.9)
+			ring(effect, Vector3.ZERO, radius, Ink.PLAYER_TRIMS[0], 0.65, 0.7)
+			ring(effect, Vector3.UP * 0.15, radius * 0.85, Ink.INK, 0.48, 0.5)
+			burst(effect, Vector3.UP * 0.45, Ink.INDIGO_LIGHT, 26, 5.0, 0.14, 0.7, Vector3(0, -1.0, 0))
+			for i in 12:
+				var angle := TAU * float(i) / 12.0
+				var radial := Vector3(cos(angle), 0, sin(angle))
+				tracer(effect, radial * radius * 0.25 + Vector3.UP * 0.12,
+					radial * radius * 0.9 + Vector3.UP * 0.2, Ink.PLAYER_TRIMS[0], 0.035, 0.4)
+		"dash":
+			var forward := Vector3(direction.x, 0, direction.z).normalized()
+			if forward.length_squared() < 0.1:
+				forward = Vector3.FORWARD
+			var side := forward.cross(Vector3.UP)
+			for i in 6:
+				var offset := side * (-0.65 if i % 2 == 0 else 0.65) + Vector3.UP * (0.25 + float(i / 2) * 0.4)
+				tracer(effect, offset - forward * 0.35, offset + forward * (2.8 + i * 0.2), Ink.PLAYER_TRIMS[0], 0.025, 0.32)
+			burst(effect, Vector3.UP * 0.4, Ink.PLAYER_TRIMS[0], 14, 2.2, 0.08, 0.45, Vector3(0, 0.5, 0))
+			ring(effect, Vector3.ZERO, 1.1, Ink.INDIGO_LIGHT, 0.35, 0.5)
+		"talisman":
+			var origin := Vector3.UP * 1.3 + direction.normalized() * 0.8
+			_spell_glyph(effect, "符", origin, Ink.GOLD, 0.38, true)
+			burst(effect, origin, Ink.GOLD, 12, 1.8, 0.055, 0.4, Vector3(0, 0.8, 0))
+	_free_after(effect, 1.4)
+
+
+static func talisman_impact(parent: Node3D, pos: Vector3, radius: float) -> void:
+	if not is_instance_valid(parent) or not parent.is_inside_tree():
+		return
+	var effect := Node3D.new()
+	effect.name = "TalismanBloom"
+	effect.position = pos
+	parent.add_child(effect)
+	effect.add_to_group("spell_effects")
+	_spell_sigil(effect, radius * 0.6, Ink.GOLD, "火", 0.7)
+	ring(effect, Vector3.ZERO, radius, Ink.GOLD, 0.5, 0.75)
+	ring(effect, Vector3.UP * 0.2, radius * 0.72, Ink.CINNABAR_BRIGHT, 0.65, 0.65)
+	burst(effect, Vector3.UP * 0.3, Ink.GOLD, 28, 6.0, 0.13, 0.75, Vector3(0, 2.0, 0))
+	burst(effect, Vector3.UP * 0.2, Ink.CINNABAR_BRIGHT, 16, 4.0, 0.18, 0.65, Vector3(0, -2, 0))
+	_spell_glyph(effect, "焚", Vector3.UP * 0.9, Ink.GOLD, 0.55, true)
+	_free_after(effect, 1.2)
+
+
+static func _spell_sigil(parent: Node3D, radius: float, color: Color,
+		glyph: String, duration: float) -> void:
+	var seal := Node3D.new()
+	seal.position.y = 0.055
+	parent.add_child(seal)
+	var mat := Ink.unlit(Color(color.r, color.g, color.b, 0.5))
+	for scale_factor in [1.0, 0.8]:
+		var torus := TorusMesh.new()
+		torus.inner_radius = radius * scale_factor - 0.025
+		torus.outer_radius = radius * scale_factor
+		torus.rings = 48
+		torus.ring_segments = 4
+		var circle := MeshInstance3D.new()
+		circle.mesh = torus
+		circle.material_override = mat
+		circle.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		seal.add_child(circle)
+	for i in 8:
+		var angle := TAU * float(i) / 8.0
+		var point := Vector3(cos(angle), 0, sin(angle)) * radius * 0.9
+		var stroke := Ink.add_box(seal, Vector3(0.04, 0.01, radius * 0.12), color,
+			point, Vector3(0, -rad_to_deg(angle), 0), {"outline": 0})
+		stroke.material_override = mat
+		stroke.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for i in 4:
+		var angle := TAU * float(i) / 4.0
+		_spell_glyph(seal, glyph, Vector3(cos(angle), 0.02, sin(angle)) * radius * 0.55, color, duration, false)
+	seal.scale = Vector3.ONE * 0.65
+	var tw := seal.create_tween().set_parallel(true)
+	tw.tween_property(seal, "scale", Vector3.ONE, duration * 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(seal, "rotation:y", 0.22, duration)
+	tw.tween_property(mat, "albedo_color:a", 0.0, duration * 0.65).set_delay(duration * 0.35)
+	tw.chain().tween_callback(seal.queue_free)
+
+
+static func _spell_glyph(parent: Node3D, glyph: String, pos: Vector3,
+		color: Color, duration: float, billboard: bool) -> void:
+	var label := Label3D.new()
+	label.text = glyph
+	label.font = BRUSH_FONT
+	label.font_size = 64
+	label.pixel_size = 0.008
+	label.modulate = color
+	label.outline_size = 0
+	label.no_depth_test = false
+	label.position = pos
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED if billboard else BaseMaterial3D.BILLBOARD_DISABLED
+	if not billboard:
+		label.rotation.x = -PI * 0.5
+	parent.add_child(label)
+	var tw := label.create_tween()
+	tw.tween_property(label, "modulate:a", 0.0, duration)
+	tw.tween_callback(label.queue_free)
 
 
 static func slash(parent: Node3D, pos: Vector3, dir: Vector3, color: Color) -> void:

@@ -50,6 +50,12 @@ func _run() -> void:
 	print("[coop:%s] connecting transport=%s port=%d" % [_role, _transport, _port])
 	if not await _until(func(): return _net.active and _net.peers.size() == 2, "two authenticated peers"):
 		return
+	var ping_peer: int = _net.peers.keys().filter(func(id): return int(id) != _net.local_id)[0]
+	if not await _until(func(): return _net.latency_ms(ping_peer) >= 0, "real round-trip latency measurement"):
+		return
+	if not _check(_net.connection_latency_text().contains("ms"), "connection latency has milliseconds"):
+		return
+	print("[coop:%s] PASS measured RTT %s" % [_role, _net.latency_text(ping_peer)])
 	if _role == "host":
 		await _host()
 	else:
@@ -112,6 +118,15 @@ func _host() -> void:
 	leaper.queue_free()
 	reaver.queue_free()
 	print("[coop:host] PASS special attack snapshot presentation")
+	actor.skills.talisman = true
+	_main.player.skills.nova = true
+	load("res://scripts/skills/skill_db.gd").cast("nova", _main.player)
+	_net.send("coop_audit", {"phase": "spell_test"})
+	if not await _until(func(): return _inbox.has("spells_seen"), "host cast and remote talisman impact effects"):
+		return
+	if not _check(float(actor.skill_cooldowns.talisman) > 0.0, "remote spell cast consumed authoritative cooldown"):
+		return
+	print("[coop:host] PASS host spell broadcast and client fire talisman")
 	actor.invuln_time = 0.0
 	actor.take_damage(17.0, null, 0.0, actor.global_position + Vector3(8, 0, -5))
 	actor.invuln_time = 30.0
@@ -133,6 +148,18 @@ func _host() -> void:
 	if not await _until(func(): return _inbox.has("upgrade_seen"), "client upgrade screen"):
 		return
 	if not _check(not actor.dead and actor.health > 0.0, "team revived after clearing wave"):
+		return
+	for attempt in 3:
+		_main.upgrades._on_refresh()
+		if not _check(_main.upgrades.refreshes_left == 2 - attempt and int(_coop._refreshes[_net.local_id]) == 2 - attempt, "host refresh is authoritative"):
+			return
+	if not await _until(func(): return _inbox.has("refresh_seen"), "client completed three refreshes"):
+		return
+	if not _check(int(_coop._refreshes[_remote_id]) == 0, "remote refresh budget independent of host"):
+		return
+	var remote_choices: Array = _coop._choices[_remote_id].duplicate(true)
+	_coop._accept_refresh(_remote_id)
+	if not _check(_coop._choices[_remote_id] == remote_choices and int(_coop._refreshes[_remote_id]) == 0, "authority rejects fourth remote refresh"):
 		return
 	_main._on_upgrade_chosen(_main.upgrades._cards[0].data)
 	if not _check(_coop._waiting.has(_remote_id), "host waits for teammate choice"):
@@ -214,6 +241,14 @@ func _client() -> void:
 		return
 	_net.send("coop_audit", {"phase": "special_attacks_seen"})
 	print("[coop:client] PASS leap target and whirlwind state arrive from authority")
+	if not await _until(func(): return _inbox.has("spell_test") and _inbox.has("host_spell") and _main.player.skills.talisman, "host spell effect and talisman unlock"):
+		return
+	_main.player.head.look_at(_main.player.position + Vector3(0, 0, -4), Vector3.UP)
+	load("res://scripts/skills/skill_db.gd").cast("talisman", _main.player)
+	if not await _until(func(): return _inbox.has("spell_bloom"), "authoritative talisman impact effect"):
+		return
+	_net.send("coop_audit", {"phase": "spells_seen"})
+	print("[coop:client] PASS host cast and fire impact visual effects")
 	if not await _until(func(): return _inbox.has("health"), "host damage signal"):
 		return
 	if not await _until(func(): return absf(_main.player.health - float(_inbox.health.health)) < 0.1, "health snapshot"):
@@ -230,6 +265,13 @@ func _client() -> void:
 	if not await _until(func(): return _game.state == _game.State.UPGRADE and not _main.upgrades._cards.is_empty(), "client upgrade open"):
 		return
 	_net.send("coop_audit", {"phase": "upgrade_seen"})
+	for attempt in 3:
+		_main.upgrades._on_refresh()
+		if not await _until(func(): return not _main.upgrades._refresh_pending, "client refresh response while paused"):
+			return
+		if not _check(_main.upgrades.refreshes_left == 2 - attempt and _main.upgrades._cards.size() == 3, "client receives authoritative refresh cards and charges"):
+			return
+	_net.send("coop_audit", {"phase": "refresh_seen"})
 	if not await _until(func(): return _inbox.has("choose_upgrade"), "host own choice completed"):
 		return
 	_main._on_upgrade_chosen(_main.upgrades._cards[0].data)
@@ -257,6 +299,12 @@ func _client() -> void:
 	quit(0)
 
 func _receive(_sender: int, kind: String, data: Dictionary) -> void:
+	if kind == "skill_fx" and int(data.get("owner", 0)) == 1 and data.get("id", "") == "nova":
+		_inbox["host_spell"] = data
+		_check(not get_nodes_in_group("spell_effects").is_empty(), "host nova creates client-side visual")
+	elif kind == "spell_impact":
+		_inbox["spell_bloom"] = data
+		_check(not get_nodes_in_group("spell_effects").is_empty(), "authoritative impact creates client-side visual")
 	if kind == "coop_audit":
 		_inbox[String(data.get("phase", ""))] = data
 		print("[coop:%s] phase=%s wave=%d state=%d paused=%s" % [_role, data.get("phase", ""), _game.wave, _game.state, str(paused)])

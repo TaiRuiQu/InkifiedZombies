@@ -172,6 +172,7 @@ func _connect() -> void:
 	director.boss_defeated.connect(_on_boss_defeated)
 	player.died.connect(_on_player_died)
 	upgrades.chosen.connect(_on_upgrade_chosen)
+	upgrades.refresh_requested.connect(_on_upgrade_refresh)
 	pause.resume_requested.connect(_resume)
 	pause.restart_requested.connect(_restart_run)
 	pause.title_requested.connect(_return_to_title)
@@ -272,6 +273,14 @@ func _on_wave_cleared(wave: int) -> void:
 	if NET.active and NET.is_host:
 		Coop.open_upgrades(wave)
 	get_tree().paused = true
+
+
+func _on_upgrade_refresh() -> void:
+	if NET.active:
+		Coop.refresh_upgrades()
+		return
+	var previous := upgrades._cards.map(func(card): return card.data)
+	upgrades.apply_refresh(UpgradeDB.roll(player, Game.wave, 3, previous), upgrades.refreshes_left - 1)
 
 
 func _on_upgrade_chosen(data: Dictionary) -> void:

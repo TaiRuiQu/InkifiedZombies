@@ -24,13 +24,13 @@ var _right_leg: Node3D
 var _gun: Node3D
 var _flash: MeshInstance3D
 var _label: Label3D
-var _team_color := Ink.JADE
+var _team_color: Color = Ink.PLAYER_TRIMS[0]
 
 
 func setup(id: int, nickname: String, team_index: int = 0) -> void:
 	peer_id = id
 	player_name = nickname.left(24)
-	_team_color = [Ink.JADE, Ink.INDIGO_LIGHT, Ink.OCHRE, Ink.CINNABAR][posmod(team_index, 4)]
+	_team_color = Ink.PLAYER_TRIMS[posmod(team_index, 4)]
 	if _label:
 		_refresh_label()
 
@@ -119,7 +119,7 @@ func _joint(parent: Node3D, pos: Vector3) -> Node3D:
 
 func _build_model() -> void:
 	_body = _joint(self, Vector3.ZERO)
-	_part(_body, Ink.capsule_mesh(0.23, 0.68), Ink.INDIGO, Vector3(0, 1.06, 0))
+	_part(_body, Ink.capsule_mesh(0.23, 0.68), Ink.PLAYER_COAT, Vector3(0, 1.06, 0))
 	_part(_body, Ink.cylinder_mesh(0.2, 0.34, 0.6, 10), Ink.INK_SOFT, Vector3(0, 0.64, 0))
 	_part(_body, Ink.box_mesh(Vector3(0.5, 0.1, 0.34)), _team_color, Vector3(0, 0.88, 0))
 	for side in [-1, 1]:
@@ -137,7 +137,7 @@ func _build_model() -> void:
 	_part(_head, Ink.cylinder_mesh(0.03, 0.43, 0.025, 14), Ink.OCHRE, Vector3(0, 0.105, 0.015))
 	for side in [-1, 1]:
 		var arm := _joint(_body, Vector3(side * 0.32, 1.32, 0))
-		_part(arm, Ink.capsule_mesh(0.095, 0.53), Ink.INDIGO, Vector3(0, -0.24, 0))
+		_part(arm, Ink.capsule_mesh(0.095, 0.53), Ink.PLAYER_COAT, Vector3(0, -0.24, 0))
 		_part(arm, Ink.cylinder_mesh(0.105, 0.09, 0.08, 8), _team_color, Vector3(0, -0.38, 0))
 		_part(arm, Ink.sphere_mesh(0.075), Ink.PAPER_DARK, Vector3(0, -0.5, 0))
 		var leg := _joint(_body, Vector3(side * 0.14, 0.55, 0))
@@ -207,4 +207,4 @@ func _build_weapon() -> void:
 
 func _refresh_label() -> void:
 	if _label:
-		_label.text = "%s\n%s" % [player_name, "倒地 · 等待波末归队" if dead else "气血 %d" % int(ceil(health))]
+		_label.text = "%s\n%s" % [player_name, "倒地 · 等待波末归队" if dead else "血 %d" % int(ceil(health))]

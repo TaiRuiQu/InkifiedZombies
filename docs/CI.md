@@ -14,13 +14,13 @@ GitHub Actions 使用 `.github/godot-version` 指定的 Godot 稳定版本，并
 
 ## 发布版本
 
-1. 更新 `project.godot` 的 `config/version`，例如 `0.2.3-beta`，并提交代码。
+1. 更新 `project.godot` 的 `config/version`，例如 `0.2.3`，并提交代码。
 2. 推送对应的 `v` 标签：
 
    ```sh
-   git tag v0.2.3-beta
+   git tag v0.2.3
    git push origin main
-   git push origin v0.2.3-beta
+   git push origin v0.2.3
    ```
 
 3. **Build release** 先执行检查，再在 Windows / Linux 运行器分别构建客户端与中转服务。
@@ -55,8 +55,8 @@ gh workflow run release.yml --ref main
 
 ```powershell
 python tools/ci/install_godot.py --version 4.7.2 --destination .ci/godot --templates
-python tools/ci/build_client.py --godot .ci/godot/godot.exe --platform windows --version 0.2.2-beta --output dist/release
-python tools/ci/build_relay.py --platform windows --version 0.2.2-beta --output dist/release
+python tools/ci/build_client.py --godot .ci/godot/godot.exe --platform windows --version 0.2.3 --output dist/release
+python tools/ci/build_relay.py --platform windows --version 0.2.3 --output dist/release
 ```
 
 Linux 将引擎路径改为 `.ci/godot/godot`、平台改为 `linux`。中转构建另需 Go；版本要求见 `server/go.mod`。

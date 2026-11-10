@@ -10,6 +10,7 @@ uniform vec4 sun_color : source_color = vec4(0.84, 0.26, 0.15, 1.0);
 uniform vec4 ridge_far : source_color = vec4(0.47, 0.51, 0.49, 1.0);
 uniform vec4 ridge_mid : source_color = vec4(0.31, 0.36, 0.33, 1.0);
 uniform vec4 ridge_near : source_color = vec4(0.17, 0.21, 0.19, 1.0);
+uniform float ridge_near_strength : hint_range(0.0, 1.0) = 1.0;
 uniform vec3 sun_dir = vec3(0.46, 0.20, -0.86);
 uniform float cloud_amount : hint_range(0.0, 1.0) = 0.85;
 
@@ -123,7 +124,7 @@ void fragment() {
 	float mask_near = smoothstep(ridge_c + 0.004, ridge_c - 0.004, d.y);
 	col = mix(col, ridge_far.rgb, mask_far * 0.78);
 	col = mix(col, ridge_mid.rgb, mask_mid * 0.86);
-	col = mix(col, ridge_near.rgb, mask_near * 0.92);
+	col = mix(col, ridge_near.rgb, mask_near * 0.92 * ridge_near_strength);
 
 	// Low-lying paper haze hugging the horizon.
 	float haze = smoothstep(0.16, 0.0, d.y);

@@ -16,6 +16,7 @@ var velocity := Vector3.ZERO
 var dead := false
 var _trail: CPUParticles3D
 var _spin := 0.0
+var spell_id := ""
 
 
 func setup(opts: Dictionary) -> void:
@@ -29,6 +30,7 @@ func setup(opts: Dictionary) -> void:
 	explode_radius = float(opts.get("explode_radius", 0.0))
 	explode_damage = float(opts.get("explode_damage", 0.0))
 	source = opts.get("source", null)
+	spell_id = String(opts.get("spell", ""))
 
 
 func _ready() -> void:
@@ -95,6 +97,16 @@ func _build_trail() -> void:
 	ramp.set_color(0, Color(1, 1, 1, 0.75))
 	ramp.set_color(1, Color(1, 1, 1, 0.0))
 	_trail.color_ramp = ramp
+	if spell_id == "talisman":
+		_trail.amount = 32
+		_trail.lifetime = 0.55
+		_trail.gravity = Vector3(0, 1.2, 0)
+		_trail.scale_amount_min = radius * 0.25
+		_trail.scale_amount_max = radius * 1.6
+		mat.albedo_texture = ProcTex.soft_circle(32)
+		mat.emission_enabled = true
+		mat.emission = Ink.GOLD
+		mat.emission_energy_multiplier = 1.5
 	add_child(_trail)
 	_trail.emitting = true
 
@@ -157,7 +169,12 @@ func _impact(pos: Vector3, normal: Vector3, collider: Object) -> void:
 
 
 func _explode(pos: Vector3) -> void:
-	VFX.explosion(get_parent(), pos, explode_radius, color)
+	if spell_id == "talisman":
+		VFX.talisman_impact(get_parent(), pos, explode_radius)
+		if NET.active and NET.is_host:
+			NET.send("spell_impact", {"position": Coop._pack(pos), "radius": explode_radius})
+	else:
+		VFX.explosion(get_parent(), pos, explode_radius, color)
 	Sfx.play("explosion", 0.0, randf_range(0.9, 1.1))
 	if friendly:
 		var player: Node = source if is_instance_valid(source) and source.is_in_group("player") else get_tree().get_first_node_in_group("player")

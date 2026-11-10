@@ -16,7 +16,7 @@
 | `player/player.gd` | 移动、武器状态、命中与伤害、技能入口、升级应用、补给 |
 | `combat/combat_query.gd` | 共用视线与范围伤害策略，实体世界阻挡伤害 |
 | `combat/projectile.gd` | 友方 / 敌方弹丸的移动、碰撞与爆炸 |
-| `enemies/enemy.gd` | 敌人碰撞、状态、攻击、生命与掉落 |
+| `enemies/enemy.gd` | 敌人碰撞、状态、攻击、血与掉落 |
 | `enemies/enemy_steering.gd` | 局部避障、群体分离查询节流、绕障方向记忆 |
 | `enemies/enemy_visual.gd` | 六类模型、关节与表现；按关节 / 材质合并并缓存网格 |
 | `player/weapon_view.gd` | 枪械切换、机瞄、摆动、后坐与装填表现 |
@@ -26,7 +26,7 @@
 | `ui/` | 纸墨主题、HUD、菜单、升级、设置与房间界面 |
 | `network/network_session.gd`，Autoload `NET` | 直连 / 中转、身份、房间成员、就绪、消息路由与连接错误 |
 | `network/coop_session.gd`，Autoload `Coop` | 房主战斗判定、玩家代理、状态快照、升级同步与清波复活 |
-| `network/remote_player.gd` | 队友外观、姓名 / 血量、插值与动作表现 |
+| `network/remote_player.gd` | 队友外观、姓名 / 血、插值与动作表现 |
 | `dev/dev_scenarios.gd` | 自动截图与烟雾场景，避免挤在正常流程脚本中 |
 | `server/` | 独立 Go WebSocket 中转；无需 Godot 和数据库 |
 | `tools/build-client.ps1` | 资源导入、PCK 导出、Windows 引擎运行时与许可文件整理、试玩 ZIP 打包 |
@@ -59,7 +59,7 @@ arena.build()
 
 ## 扩展敌人
 
-创建 `EnemyDefinition` 资源，设置生命、移速、攻击范围 / 冷却、碰撞尺寸、预算成本、最早波次、抽取权重、行为与外观 ID：
+创建 `EnemyDefinition` 资源，设置血、移速、攻击范围 / 冷却、碰撞尺寸、预算成本、最早波次、抽取权重、行为与外观 ID：
 
 ```gdscript
 var definition: EnemyDefinition = load("res://data/enemies/my_enemy.tres")
@@ -122,7 +122,7 @@ static func cast(player: Node3D) -> void:
 
 `NET` 对上层统一暴露房间与消息接口：`host_direct(port, name)`、`join_direct(address, port, name)`、`host_relay(address, room, password, name)`、`join_relay(...)`、`set_ready`、`send`、`leave`。创建成功 / 连接成功、失败、成员变化通过信号通知界面。房主 ID 固定为 1，最多四人。
 
-`Coop` 由房主处理敌人、命中、生命、掉落、技能与升级；客户端提交动作请求，房主检查武器拥有情况、弹药、装填、射速、技能解锁 / 冷却等。移动采用客户端本地操作、定期姿态上报与房主位置范围 / 速度 / 视线校验，再以快照校正；没有完整回滚或命中延迟补偿。
+`Coop` 由房主处理敌人、命中、血、掉落、技能与升级；客户端提交动作请求，房主检查武器拥有情况、弹药、装填、射速、技能解锁 / 冷却等。移动采用客户端本地操作、定期姿态上报与房主位置范围 / 速度 / 视线校验，再以快照校正；没有完整回滚或命中延迟补偿。
 
 当前快照间隔 0.1 秒，客户端姿态上报间隔 0.05 秒。数据为可靠 JSON 消息；`RemotePlayer`、敌人 / 弹丸 / 拾取物代理负责客户端表现。升级卡由房主抽取并逐人下发，只接受该玩家实际获选卡的 ID，全员提交后继续。
 

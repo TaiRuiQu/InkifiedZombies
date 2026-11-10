@@ -115,6 +115,7 @@ func _spawn_boss() -> void:
 	_scale_enemy(e)
 	var pos := _far_spawn_point()
 	e.position = pos
+	_set_entry_route(e, pos)
 	add_child(e)
 	boss = e
 	boss.died.connect(_on_boss_died)
@@ -166,13 +167,15 @@ func _spawn_next() -> void:
 	_scale_enemy(e)
 	var pos := _spawn_point_away_from_player()
 	e.position = pos
+	_set_entry_route(e, pos)
 	add_child(e)
 	_spawned += 1
 
 
 func _spawn_point_away_from_player() -> Vector3:
 	if spawn_points.is_empty():
-		return Vector3(_rng.randf_range(-15, 15), 0.0, _rng.randf_range(-15, 15))
+		var angle := TAU * float(_rng.randi_range(0, MapBuilder.GATE_COUNT - 1)) / MapBuilder.GATE_COUNT
+		return Vector3(cos(angle), 0, sin(angle)) * MapBuilder.SPAWN_RADIUS + Vector3.UP * 0.05
 	var best := spawn_points[_rng.randi() % spawn_points.size()]
 	var best_d := -1.0
 	for i in 6:
@@ -189,7 +192,7 @@ func _spawn_point_away_from_player() -> Vector3:
 
 
 func _far_spawn_point() -> Vector3:
-	var best := Vector3(0, 0, -22)
+	var best := Vector3(0, 0.05, -MapBuilder.SPAWN_RADIUS)
 	var best_d := -1.0
 	for p in spawn_points:
 		var d := 999.0
@@ -199,6 +202,14 @@ func _far_spawn_point() -> Vector3:
 			best_d = d
 			best = p
 	return best
+
+
+func _set_entry_route(enemy: Enemy, pos: Vector3) -> void:
+	if Vector2(pos.x, pos.z).length() <= MapBuilder.ARENA_RADIUS:
+		return
+	var step := TAU / MapBuilder.GATE_COUNT
+	var angle := roundf(atan2(pos.z, pos.x) / step) * step
+	enemy.entry_target = Vector3(cos(angle), 0, sin(angle)) * (MapBuilder.GATE_RADIUS - 2.5)
 
 
 func _scale_enemy(enemy: Enemy) -> void:

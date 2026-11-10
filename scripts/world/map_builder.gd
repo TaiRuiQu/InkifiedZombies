@@ -11,6 +11,7 @@ const BRUSH_FONT: Font = preload("res://assets/fonts/MaShanZheng-Regular.ttf")
 const ARENA_RADIUS := 27.9
 const GATE_COUNT := 8
 const GATE_RADIUS := 24.6
+const SPAWN_RADIUS := 35.0
 
 var definition: MapDefinition
 var map_id := "courtyard"
@@ -156,6 +157,7 @@ func _build_sky() -> void:
 	mat.set_shader_parameter("ridge_far", Color("8a948b"))
 	mat.set_shader_parameter("ridge_mid", Color("5f6c63"))
 	mat.set_shader_parameter("ridge_near", Color("38443e"))
+	mat.set_shader_parameter("ridge_near_strength", 1.0 if definition.night else 0.0)
 	mat.set_shader_parameter("cloud_amount", 0.9)
 	_dome.material_override = mat
 	add_child(_dome)
@@ -234,11 +236,22 @@ func _build_walls() -> void:
 			continue
 		_wall_piece(a, ARENA_RADIUS)
 
-	# Invisible barriers filling the gate openings.
+	# Players stay in the courtyard; enemies can walk in from outside.
+	var boundary := StaticBody3D.new()
+	boundary.name = "PlayerBoundary"
+	boundary.collision_layer = 64
+	boundary.collision_mask = 0
+	add_child(boundary)
 	for g in GATE_COUNT:
 		var a := TAU * float(g) / float(GATE_COUNT)
 		var p := Vector3(cos(a), 0, sin(a)) * (ARENA_RADIUS + 0.2)
-		_collider(Vector3(0.9, 6.0, 6.4), Vector3(p.x, 3.0, p.z), Vector3(0, -rad_to_deg(a), 0))
+		var shape := BoxShape3D.new()
+		shape.size = Vector3(0.9, 6.0, 6.4)
+		var barrier := CollisionShape3D.new()
+		barrier.shape = shape
+		barrier.position = p + Vector3.UP * 3.0
+		barrier.rotation.y = -a
+		boundary.add_child(barrier)
 
 
 func _near_gate(a: float, threshold_deg: float) -> bool:
@@ -330,7 +343,7 @@ func _build_gates() -> void:
 		_collider(Vector3(0.4, 3.5, 0.4), center + Vector3(-sin(a), 0, cos(a)) * 2.35 + Vector3(0, 1.75, 0), Vector3(0, rot_y, 0))
 		_collider(Vector3(0.4, 3.5, 0.4), center + Vector3(sin(a), 0, -cos(a)) * 2.35 + Vector3(0, 1.75, 0), Vector3(0, rot_y, 0))
 
-		spawn_positions.append(center + Vector3(-cos(a), 0, -sin(a)) * 1.4 + Vector3(0, 0.05, 0))
+		spawn_positions.append(Vector3(cos(a), 0, sin(a)) * SPAWN_RADIUS + Vector3.UP * 0.05)
 
 
 # --------------------------------------------------------------------------
@@ -532,7 +545,7 @@ func _build_props() -> void:
 	_lantern(Vector3(12.5, 0, 10.5), 1.0)
 	_lantern(Vector3(-12.5, 0, -10.5), 1.0)
 	_lantern(Vector3(12.5, 0, -10.5), 1.0)
-	_lantern(Vector3(0.0, 0, 23.5), 1.15)
+	_lantern(Vector3(3.8, 0, 23.0), 1.15)
 	_pine(Vector3(-18.5, 0, -3.0), 1.15)
 	_pine(Vector3(18.0, 0, -10.5), 0.95)
 	_pine(Vector3(-19.0, 0, 14.5), 0.8)
@@ -650,6 +663,7 @@ func _pine(pos: Vector3, scale_v: float) -> void:
 
 func _crates(pos: Vector3) -> void:
 	var g := Node3D.new()
+	g.name = "Crates"
 	g.position = pos
 	g.rotation_degrees.y = rng.randf_range(-20, 20)
 	add_child(g)
@@ -660,9 +674,21 @@ func _crates(pos: Vector3) -> void:
 	for i in 3:
 		var s: Vector3 = sizes[i]
 		var o: Vector3 = offsets[i]
-		Ink.add_box(g, s, wood.lerp(wood_dark, rng.randf()), o,
-			Vector3(0, rng.randf_range(-12, 12), rng.randf_range(-3, 3)),
+		var color := wood.lerp(wood_dark, rng.randf())
+		Ink.add_box(g, s, color, o,
+			Vector3.ZERO,
 			{"outline": 0.008, "wobble": 0.002, "wash": 0.4})
+		var body := StaticBody3D.new()
+		body.name = "Crate_%d" % i
+		body.collision_layer = 1
+		body.collision_mask = 0
+		g.add_child(body)
+		var shape := BoxShape3D.new()
+		shape.size = s
+		var collision := CollisionShape3D.new()
+		collision.shape = shape
+		collision.position = o
+		body.add_child(collision)
 		# Slat lines.
 		for k in 2:
 			Ink.add_box(g, Vector3(s.x + 0.04, 0.06, 0.08), wood_dark,
@@ -674,7 +700,6 @@ func _crates(pos: Vector3) -> void:
 			{"outline": 0.003, "wobble": 0.003, "wash": 0.2})
 		Ink.add_box(g, Vector3(0.12, 0.12, 0.015), Ink.CINNABAR,
 			o + Vector3(0, 0.02, s.z * 0.5 + 0.045), Vector3(0, 6, 3), {"outline": 0.001})
-	_collider(Vector3(2.6, 1.2, 1.6), pos + Vector3(0.3, 0.6, 0.4), Vector3.ZERO)
 
 
 func _barrels(pos: Vector3) -> void:
@@ -712,6 +737,8 @@ func _banner(pos: Vector3, rot_y: float, glyph: String, cloth: Color) -> void:
 func _scatter_rocks() -> void:
 	for i in 16:
 		var a := rng.randf() * TAU
+		if _near_gate(a, 6.5):
+			continue
 		var r := rng.randf_range(19.0, 26.0)
 		var p := Vector3(cos(a) * r, 0.1, sin(a) * r)
 		var s := rng.randf_range(0.18, 0.55)
@@ -796,12 +823,15 @@ func _bamboo(pos: Vector3, count: int) -> void:
 
 
 func _build_mountains() -> void:
+	_build_green_ridge()
 	# Dark rounded hills just beyond the cliff ring.
 	for i in 9:
 		var a := TAU * float(i) / 9.0 + rng.randf_range(-0.16, 0.16)
 		var r := rng.randf_range(62.0, 92.0)
 		var h := rng.randf_range(6.0, 16.0)
 		var rad := rng.randf_range(24.0, 42.0)
+		# Keep the solid slopes beyond the enemy approach lanes.
+		r = maxf(r, rad * 1.7 + SPAWN_RADIUS + 6.0)
 		var col := Color("28332c").lerp(Color("3c4a3f"), rng.randf())
 		var hill := Ink.add_sphere(self, rad, col,
 			Vector3(cos(a) * r, -h * 0.4, sin(a) * r),
@@ -809,6 +839,17 @@ func _build_mountains() -> void:
 			Vector3(0, rng.randf_range(0, 360), rng.randf_range(-4, 4)),
 			{"outline": 0, "wash": 0.5, "hatch": 0.12, "rim": 0.0, "pool": 0.0, "scale": 0.1})
 		hill.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		hill.name = "GreenSlope_%d" % i
+		# Bake the visible geometry into collision, including its stretched shape.
+		var faces := hill.mesh.get_faces()
+		for vertex in faces.size():
+			faces[vertex] = hill.transform * faces[vertex]
+		var shape := ConcavePolygonShape3D.new()
+		shape.set_faces(faces)
+		var collision := CollisionShape3D.new()
+		collision.name = "GreenSlopeCollision_%d" % i
+		collision.shape = shape
+		_world_body.add_child(collision)
 
 	# A broken ring of cliff rocks around the plateau (open at the north gate).
 	for i in 34:
@@ -850,6 +891,40 @@ func _build_mountains() -> void:
 	mmi.material_override = Ink.surface(Color("232d27"), {"outline": 0, "wash": 0.3, "rim": 0.0})
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(mmi)
+
+
+func _build_green_ridge() -> void:
+	# World-space rolling terrain replaces the nearby painted sky silhouette.
+	# The inner skirt stays outside all eight enemy approach lanes.
+	var radii := [48.0, 70.0, 98.0, 125.0, 165.0, 205.0]
+	var profile := [0.0, 0.38, 1.0, 0.72, 0.28, 0.0]
+	var segments := 96
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for row in radii.size() - 1:
+		for column in segments:
+			var corners: Array[Vector3] = []
+			for offset: Vector2i in [Vector2i(0, 0), Vector2i(0, 1), Vector2i(1, 0), Vector2i(1, 1)]:
+				var ring_index: int = row + offset.x
+				var angle := TAU * float(column + offset.y) / segments
+				var height := (18.0 + 6.0 * sin(angle * 3.0 + 0.7) + 3.0 * sin(angle * 7.0 + 2.1)) * float(profile[ring_index]) - 0.5
+				var distance: float = radii[ring_index]
+				corners.append(Vector3(cos(angle) * distance, height, sin(angle) * distance))
+			for index in [0, 1, 2, 1, 3, 2]:
+				surface.add_vertex(corners[index])
+	surface.generate_normals()
+	var mesh := surface.commit()
+	var terrain := MeshInstance3D.new()
+	terrain.name = "GreenRidgeTerrain"
+	terrain.mesh = mesh
+	terrain.material_override = Ink.surface(Color("46664b") if not definition.night else Color("304a43"),
+		{"outline": 0, "wash": 0.36, "hatch": 0.15, "rim": 0.04, "scale": 0.12})
+	terrain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(terrain)
+	var collision := CollisionShape3D.new()
+	collision.name = "GreenRidgeTerrainCollision"
+	collision.shape = mesh.create_trimesh_shape()
+	_world_body.add_child(collision)
 
 
 func _build_atmosphere() -> void:

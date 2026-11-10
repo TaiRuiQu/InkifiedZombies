@@ -23,7 +23,10 @@ if (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'project.godot'))) {
 $clientDirectory = Join-Path $projectRoot 'dist\client-windows'
 $packPath = Join-Path $clientDirectory 'InkTide.pck'
 $runtimePath = Join-Path $clientDirectory 'InkTide.exe'
-$archivePath = Join-Path $projectRoot 'dist\InkTide-0.2.2-beta-Windows-x64.zip'
+$versionMatch = [regex]::Match([IO.File]::ReadAllText((Join-Path $projectRoot 'project.godot')), '(?m)^config/version="([0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?)"\s*$')
+if (-not $versionMatch.Success) { throw 'project.godot must define a valid application version.' }
+$releaseVersion = $versionMatch.Groups[1].Value
+$archivePath = Join-Path $projectRoot "dist\InkTide-$releaseVersion-Windows-x64.zip"
 New-Item -ItemType Directory -Path $clientDirectory -Force | Out-Null
 
 if (-not $SkipImport) {
@@ -43,7 +46,7 @@ start "Ink Tide" "%~dp0InkTide.exe" --main-pack "%~dp0InkTide.pck"
 '@
 [IO.File]::WriteAllText((Join-Path $clientDirectory 'Start-InkTide.cmd'), $launcher, [Text.Encoding]::ASCII)
 $readme = @'
-墨潮 · Ink Tide 0.2.2 beta / Windows x64
+墨潮 · Ink Tide __VERSION__ / Windows x64
 
 解压整个文件夹，双击 InkTide.exe 或 Start-InkTide.cmd 即可进入游戏，无需安装 Godot。
 InkTide.exe 与 InkTide.pck 必须放在同一文件夹。请勿只复制 exe。
@@ -60,7 +63,7 @@ InkTide.exe 与 InkTide.pck 必须放在同一文件夹。请勿只复制 exe。
 字体与引擎许可见 THIRD_PARTY_NOTICES.md / FONT_LICENSE.txt / ENGINE_LICENSES.txt。
 测试快捷键与开发源码不属于本客户端发行说明。
 '@
-[IO.File]::WriteAllText((Join-Path $clientDirectory 'README-先读我.txt'), $readme, [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText((Join-Path $clientDirectory 'README-先读我.txt'), $readme.Replace('__VERSION__', $releaseVersion), [Text.UTF8Encoding]::new($false))
 Copy-Item -LiteralPath (Join-Path $projectRoot 'THIRD_PARTY_NOTICES.md') -Destination $clientDirectory -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot 'assets\fonts\OFL.txt') -Destination (Join-Path $clientDirectory 'FONT_LICENSE.txt') -Force
 
@@ -106,7 +109,7 @@ if (Test-Path -LiteralPath $verificationLog) {
 }
 $manifest = [ordered]@{
     name = 'Ink Tide'
-    version = '0.2.2-beta'
+    version = $releaseVersion
     platform = 'Windows-x64'
     packaging = 'Godot-4.7.2-editor-binary-as-runtime-with-standalone-PCK'
     built_utc = [DateTime]::UtcNow.ToString('o')

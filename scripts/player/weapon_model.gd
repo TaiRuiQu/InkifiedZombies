@@ -152,12 +152,19 @@ func _build_rifle() -> void:
 	_part(Ink.cylinder_mesh(0.027, 0.027, 0.9, 10), dark, Vector3(0, 0.05, -0.63), Vector3(90, 0, 0))
 	_part(Ink.box_mesh(Vector3(0.06, 0.06, 0.5)), dark, Vector3(0, 0.05, -0.55), Vector3.ZERO,
 		{"outline": 0.002})
-	# Scope.
-	_part(Ink.cylinder_mesh(0.055, 0.055, 0.3, 12), ink, Vector3(0, 0.135, -0.08), Vector3(90, 0, 0))
-	_part(Ink.cylinder_mesh(0.06, 0.06, 0.035, 12), dark, Vector3(0, 0.135, -0.23), Vector3(90, 0, 0),
-		{"outline": 0.002})
-	_part(Ink.cylinder_mesh(0.045, 0.045, 0.012, 12), Ink.CINNABAR, Vector3(0, 0.135, -0.245), Vector3(90, 0, 0),
-		{"outline": 0})
+	# Open tube and collars: capped cylinders used to block the sight picture.
+	scope_tube(0.055, 0.3, ink, Vector3(0, 0.135, -0.08))
+	scope_tube(0.06, 0.035, dark, Vector3(0, 0.135, -0.23))
+	var lens := _part(Ink.cylinder_mesh(0.045, 0.045, 0.002, 32), Ink.PAPER,
+		Vector3(0, 0.135, -0.245), Vector3(90, 0, 0), {"outline": 0})
+	lens.name = "ScopeGlass"
+	var glass := StandardMaterial3D.new()
+	glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	glass.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	glass.albedo_color = Color(0.52, 0.85, 0.91, 0.08)
+	glass.cull_mode = BaseMaterial3D.CULL_DISABLED
+	glass.no_depth_test = false
+	lens.material_override = glass
 	_part(Ink.box_mesh(Vector3(0.03, 0.05, 0.05)), ink, Vector3(0, 0.1, 0.02), Vector3.ZERO, {"outline": 0.002})
 	# Bipod.
 	for side in [-1, 1]:
@@ -170,6 +177,28 @@ func _build_rifle() -> void:
 	_part(Ink.box_mesh(Vector3(0.1, 0.15, 0.012)), Ink.PAPER, Vector3(-0.075, -0.01, 0.15), Vector3(0, -25, 6),
 		{"outline": 0.002})
 	_mk_muzzle(Vector3(0, 0.05, -1.1))
+
+
+func scope_tube(radius: float, length: float, color: Color, pos: Vector3) -> MeshInstance3D:
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = radius
+	mesh.bottom_radius = radius
+	mesh.height = length
+	mesh.radial_segments = 32
+	mesh.cap_top = false
+	mesh.cap_bottom = false
+	var tube := _part(mesh, color, pos, Vector3(90, 0, 0), {"outline": 0})
+	tube.name = "ScopeTube"
+	# Annular end faces give the open tube visible thickness around the glass.
+	for side in [-1, 1]:
+		var rim := TorusMesh.new()
+		rim.inner_radius = radius * 0.82
+		rim.outer_radius = radius
+		rim.rings = 32
+		rim.ring_segments = 6
+		var lip := _part(rim, color, pos + Vector3(0, 0, side * length * 0.5), Vector3(90, 0, 0), {"outline": 0})
+		lip.name = "ScopeRim"
+	return tube
 
 
 func _build_launcher() -> void:

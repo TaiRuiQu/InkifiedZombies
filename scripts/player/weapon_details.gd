@@ -103,7 +103,7 @@ static func _smg(m: WeaponModel) -> void:
 static func _rifle(m: WeaponModel) -> void:
 	# Scope collars and windage turret, bolt handle and lacquered wood inlay.
 	for z in [-0.18, 0.020]:
-		_cyl(m, 0.061, 0.024, BRASS, Vector3(0, 0.135, z))
+		m.scope_tube(0.061, 0.024, BRASS, Vector3(0, 0.135, z))
 		_box(m, Vector3(0.085, 0.035, 0.027), DARK, Vector3(0, 0.089, z))
 	_cyl(m, 0.026, 0.038, STEEL, Vector3(0.068, 0.135, -0.075), Vector3(0, 0, 90))
 	_cyl(m, 0.022, 0.032, STEEL, Vector3(0, 0.198, -0.075), Vector3.ZERO)
@@ -162,7 +162,7 @@ static func _hands(m: WeaponModel, id: String) -> void:
 		m.add_child(hand)
 		var palm := m._part(Ink.box_mesh(Vector3(0.085, 0.105, 0.09)), GLOVE, Vector3.ZERO, Vector3.ZERO, {"outline": 0.0018})
 		palm.reparent(hand, false)
-		var cuff := m._part(Ink.cylinder_mesh(0.06, 0.07, 0.16, 10), Ink.PAPER_DARK, Vector3(0, -0.115, 0.035), Vector3(-24, 0, 0), {"outline": 0.002})
+		var cuff := m._part(Ink.cylinder_mesh(0.06, 0.07, 0.16, 10), Ink.PLAYER_COAT, Vector3(0, -0.115, 0.035), Vector3(-24, 0, 0), {"outline": 0.002})
 		cuff.reparent(hand, false)
 		for i in 4:
 			var finger := m._part(Ink.capsule_mesh(0.013, 0.069, 8, 3), Color("8b8171"), Vector3(-0.028 + i * 0.018, 0.025, -0.045), Vector3(65, 0, 0), {"outline": 0.001})

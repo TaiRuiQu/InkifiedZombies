@@ -51,7 +51,7 @@ static var WEAPONS := {
 		"head_mult": 2.4, "falloff": Vector2(55.0, 110.0), "falloff_min": 0.8,
 		"sound": "rifle", "tracer": Color("ffd9ad"), "tracer_count": 1,
 		"view_pos": Vector3(0.33, -0.30, -0.66),
-		"view_aim": Vector3(0.0, -0.16, -0.54),
+		"view_aim": Vector3(0.0, -0.11475, -0.54),
 	},
 	"ink_launcher": {
 		"name": "泼墨炮", "type": "榴弹", "icon": "炮",

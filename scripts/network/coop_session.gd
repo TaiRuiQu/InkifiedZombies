@@ -14,6 +14,7 @@ var projectile_proxies: Dictionary = {}
 var pickup_proxies: Dictionary = {}
 var _waiting: Dictionary = {}
 var _choices: Dictionary = {}
+var _refreshes: Dictionary = {}
 var _movement_times: Dictionary = {}
 var _snapshot_timer := 0.0
 var _input_timer := 0.0
@@ -43,6 +44,7 @@ func clear_run() -> void:
 	pickup_proxies.clear()
 	_waiting.clear()
 	_choices.clear()
+	_refreshes.clear()
 	_movement_times.clear()
 	_last_sequence = -1
 	_ending = false
@@ -157,7 +159,7 @@ func _send_snapshot() -> void:
 	for projectile in get_tree().get_nodes_in_group("projectiles"):
 		if not projectile.dead:
 			projectiles.append({"id": projectile.get_instance_id(), "position": _pack(projectile.global_position),
-				"friendly": projectile.friendly, "radius": projectile.radius,
+				"friendly": projectile.friendly, "radius": projectile.radius, "spell": projectile.spell_id,
 				"color": [projectile.color.r, projectile.color.g, projectile.color.b]})
 	var pickups: Array = []
 	for pickup in get_tree().get_nodes_in_group("pickups"):
@@ -210,12 +212,12 @@ func _on_message(sender: int, kind: String, data: Dictionary) -> void:
 					_accept_look(actor, data)
 					_accept_move_input(actor, data)
 					var id := String(data.get("id", ""))
-					if SkillDB.cast(id, actor):
-						NET.send("skill_fx", {"owner": sender, "id": id, "position": _pack(actor.global_position)})
+					SkillDB.cast(id, actor)
 			"melee":
 				if not actor.dead and not get_tree().paused:
 					actor._melee_attack()
 			"upgrade": _accept_upgrade(sender, String(data.get("id", "")))
+			"upgrade_refresh": _accept_refresh(sender)
 		return
 	if sender != NET.host_id:
 		return
@@ -239,8 +241,13 @@ func _on_message(sender: int, kind: String, data: Dictionary) -> void:
 			main.player.confirm_combat(float(data.get("amount", 0)), bool(data.get("critical", false)), bool(data.get("killed", false)), bool(data.get("headshot", false)))
 		"skill_fx":
 			if int(data.get("owner", 0)) != NET.local_id:
-				VFX.ring(main, _unpack(data.get("position", [])), 3.5, Ink.INDIGO_LIGHT, 0.4)
+				VFX.skill_cast(main, String(data.get("id", "")), _unpack(data.get("position", [])),
+					_unpack(data.get("direction", [])), float(data.get("radius", 6.0)))
+		"spell_impact":
+			VFX.talisman_impact(main, _unpack(data.get("position", [])), float(data.get("radius", 4.0)))
 		"upgrade_open": _open_client_upgrades(int(data.get("wave", 1)), data.get("choices", []))
+		"upgrade_refreshed":
+			main.upgrades.apply_refresh(data.get("choices", []), int(data.get("remaining", 0)))
 		"next_wave":
 			_waiting.clear()
 			main.upgrades.close()
@@ -419,6 +426,7 @@ func _sync_projectiles(states: Array) -> void:
 			projectile = load("res://scripts/combat/projectile.gd").new()
 			var c: Array = state.color
 			projectile.setup({"friendly": bool(state.friendly), "radius": float(state.radius),
+				"spell": String(state.get("spell", "")),
 				"color": Color(float(c[0]), float(c[1]), float(c[2]))})
 			main.add_child(projectile)
 			projectile.set_physics_process(false)
@@ -517,8 +525,10 @@ func resupply_team() -> void:
 func open_upgrades(wave: int) -> void:
 	_waiting.clear()
 	_choices.clear()
+	_refreshes.clear()
 	for id in actors:
 		_waiting[id] = true
+		_refreshes[id] = UpgradeScreen.REFRESH_LIMIT
 		if int(id) == NET.local_id:
 			_choices[id] = main.upgrades._cards.map(func(card): return card.data)
 		else:
@@ -533,6 +543,27 @@ func _open_client_upgrades(wave: int, choices: Array) -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	main.hud.visible = false
 	get_tree().paused = true
+
+func refresh_upgrades() -> void:
+	if NET.is_host:
+		_accept_refresh(NET.local_id)
+	else:
+		NET.send("upgrade_refresh", {})
+
+
+func _accept_refresh(id: int) -> void:
+	if Game.state != Game.State.UPGRADE or not _waiting.has(id) or not actors.has(id):
+		return
+	var remaining := int(_refreshes.get(id, 0))
+	if remaining > 0:
+		_choices[id] = UpgradeDB.roll(actors[id], Game.wave, 3, _choices.get(id, []))
+		remaining -= 1
+		_refreshes[id] = remaining
+	if id == NET.local_id:
+		main.upgrades.apply_refresh(_choices[id], remaining)
+	else:
+		NET.send("upgrade_refreshed", {"choices": _choices[id], "remaining": remaining}, id)
+
 
 func choose_upgrade(data: Dictionary) -> void:
 	main.upgrades.close()
@@ -615,6 +646,7 @@ func _on_peer_joined(id: int) -> void:
 		NET.send("start", run_options(), id)
 		if Game.state == Game.State.UPGRADE:
 			_waiting[id] = true
+			_refreshes[id] = UpgradeScreen.REFRESH_LIMIT
 			_choices[id] = UpgradeDB.roll(actors[id], Game.wave, 3)
 			NET.send("upgrade_open", {"wave": Game.wave, "choices": _choices[id]}, id)
 		elif Game.state == Game.State.VICTORY:

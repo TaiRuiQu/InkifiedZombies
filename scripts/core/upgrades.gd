@@ -17,7 +17,7 @@ static var LIST := [
 		"desc": "身随墨走。\n移动速度 +7%。", "weight": 9, "max_stack": 5,
 		"effects": {"move_speed_mult_add": 0.07}},
 	{"id": "health", "name": "铁骨", "icon": "骨", "rarity": 0, "tag": "护体",
-		"desc": "以骨为笔架。\n气血上限 +20，并立即回复 20 点。", "weight": 10, "max_stack": 6,
+		"desc": "以骨为笔架。\n血上限 +20，并立即回复 20 点。", "weight": 10, "max_stack": 6,
 		"effects": {"max_health_add": 20.0, "heal_flat": 20.0}},
 	{"id": "shield", "name": "护体墨甲", "icon": "护", "rarity": 0, "tag": "护体",
 		"desc": "墨凝成甲。\n获得 20 点护体，护体会自行恢复。", "weight": 9, "max_stack": 5,
@@ -34,11 +34,11 @@ static var LIST := [
 	{"id": "scavenge", "name": "拾荒", "icon": "拾", "rarity": 0, "tag": "兵刃",
 		"desc": "战场处处是墨。\n备弹上限 +25%。", "weight": 7, "max_stack": 3,
 		"effects": {"reserve_mult_add": 0.25}},
-	{"id": "regen_kill", "name": "回气", "icon": "气", "rarity": 0, "tag": "护体",
-		"desc": "杀气化生气。\n每次击杀回复 3 气血。", "weight": 8, "max_stack": 5,
+	{"id": "regen_kill", "name": "回血", "icon": "血", "rarity": 0, "tag": "护体",
+		"desc": "杀敌补血。\n每次击杀回复 3 血。", "weight": 8, "max_stack": 5,
 		"effects": {"heal_on_kill_add": 3.0}},
 	{"id": "heal_now", "name": "小憩", "icon": "息", "rarity": 0, "tag": "护体",
-		"desc": "暂歇片刻。\n立即回复 35% 气血。", "weight": 5, "max_stack": 99,
+		"desc": "暂歇片刻。\n立即回复 35% 血。", "weight": 5, "max_stack": 99,
 		"effects": {"heal_percent": 0.35}},
 	{"id": "melee", "name": "笔力", "icon": "力", "rarity": 0, "tag": "攻伐",
 		"desc": "以笔当棍。\n近战伤害 +80%，击退更强。", "weight": 6, "max_stack": 4,
@@ -55,7 +55,7 @@ static var LIST := [
 		"desc": "寒墨凝滞。\n命中使敌人减速 25%，持续 2 秒。", "weight": 8, "max_stack": 2,
 		"effects": {"slow_on_hit_add": 0.25}},
 	{"id": "lifesteal", "name": "吸血", "icon": "血", "rarity": 1, "tag": "护体",
-		"desc": "墨血同源。\n造成伤害的 3% 转化为气血。", "weight": 7, "max_stack": 4,
+		"desc": "墨血同源。\n造成伤害的 3% 转化为血。", "weight": 7, "max_stack": 4,
 		"effects": {"lifesteal_add": 0.03}},
 	{"id": "dash", "name": "疾风步", "icon": "风", "rarity": 1, "tag": "身法",
 		"desc": "踏墨无痕。\n解锁身法：按 E 疾冲，冲刺时无敌。", "weight": 9, "max_stack": 1,
@@ -136,7 +136,7 @@ static var LIST := [
 		"desc": "此笔非人间物。\n伤害 +40%，射速 +15%，装填 +20%。", "weight": 3, "max_stack": 1,
 		"effects": {"damage_mult_add": 0.40, "fire_rate_mult_add": 0.15, "reload_mult_add": 0.20}},
 	{"id": "immortal", "name": "不灭", "icon": "灭", "rarity": 3, "tag": "护体",
-		"desc": "墨尽，魂不灭。\n每局一次：致死伤害改为回复 50% 气血并震退敌人。", "weight": 2, "max_stack": 1,
+		"desc": "墨尽，魂不灭。\n每局一次：致死伤害改为回复 50% 血并震退敌人。", "weight": 2, "max_stack": 1,
 		"effects": {"revive_add": 1}},
 	{"id": "allpierce", "name": "万墨归宗", "icon": "宗", "rarity": 3, "tag": "攻伐",
 		"desc": "万法归一，一墨万形。\n所有武器额外穿透 1 个敌人，并多射出一发。", "weight": 2, "max_stack": 1,
@@ -192,8 +192,12 @@ static func _pick_index(pool: Array, wave: int) -> int:
 	return maxi(pool.size() - 1, 0)
 
 
-static func roll(player, wave: int, count: int = 3) -> Array:
+static func roll(player, wave: int, count: int = 3, previous: Array = []) -> Array:
 	var pool := _available(player)
+	# Prefer new cards without discarding prerequisite or stack restrictions.
+	var fresh := pool.filter(func(u): return not _has_id(previous, u.id))
+	if fresh.size() >= count:
+		pool = fresh
 	var picks: Array = []
 	if pool.is_empty():
 		return picks
