@@ -29,14 +29,14 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_buses()
 	_load_bank()
-	for index in 32:
+	for index in (16 if Browser.is_web() else 32):
 		var player := AudioStreamPlayer.new()
 		player.name = "LocalVoice%d" % index
 		player.bus = BUS_NAME
 		player.max_polyphony = 1
 		add_child(player)
 		_players.append(player)
-	for index in 28:
+	for index in (12 if Browser.is_web() else 28):
 		var player := AudioStreamPlayer3D.new()
 		player.name = "WorldVoice%d" % index
 		player.bus = "WorldSfx"
@@ -85,6 +85,10 @@ func _setup_buses() -> void:
 		AudioServer.set_bus_send(AudioServer.get_bus_index(bus), "Ink" if bus == "WorldSfx" else "Master")
 	AudioServer.set_bus_send(AudioServer.get_bus_index("EnemyCues"), "WorldSfx")
 	AudioServer.set_bus_send(AudioServer.get_bus_index("EnemyMuffled"), "EnemyCues")
+	# Web Sample playback does not apply bus AudioEffects. Occlusion already
+	# applies a separate volume reduction; keep headroom without a live limiter.
+	if Browser.is_web():
+		return
 	var muffled := AudioServer.get_bus_index("EnemyMuffled")
 	if AudioServer.get_bus_effect_count(muffled) == 0:
 		var lowpass := AudioEffectLowPassFilter.new()
@@ -303,7 +307,7 @@ func play_enemy_cue(id: String, position: Vector3, options: Dictionary = {}) -> 
 	if kind == "attack":
 		for index in _enemy_voices.size():
 			var active: Dictionary = _enemy_slots[index]
-			if not active.is_empty() and String(active.kind) == "roar" and (active.source as WeakRef).get_ref() == source:
+			if not active.is_empty() and String(active.kind) in ["roar", "attack"] and (active.source as WeakRef).get_ref() == source:
 				candidate = index
 				break
 	if candidate < 0 and matching < limit:

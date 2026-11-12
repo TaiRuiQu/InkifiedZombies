@@ -17,13 +17,32 @@ func main() {
 	addr := flag.String("addr", ":7778", "HTTP/WebSocket listen address")
 	maxRooms := flag.Int("max-rooms", 256, "maximum simultaneous rooms")
 	maxConnections := flag.Int("max-connections", 1024, "maximum simultaneous connections, including handshakes")
+	requireLogin := flag.String("require-login", envValue("INK_TIDE_REQUIRE_LOGIN", "off"),
+		"account gate for rooms: off, browser (clients sending Origin) or all")
 	tlsCert := flag.String("tls-cert", "", "optional TLS certificate PEM file (requires -tls-key)")
 	tlsKey := flag.String("tls-key", "", "optional TLS private key PEM file (requires -tls-cert)")
 	flag.Parse()
 	if *maxRooms < 1 || *maxConnections < 4 || ((*tlsCert == "") != (*tlsKey == "")) {
 		log.Fatal("Invalid limits or incomplete TLS certificate/key pair")
 	}
-	relay := newRelay(Config{MaxRooms: *maxRooms, MaxConnections: *maxConnections})
+	login, err := parseLoginMode(*requireLogin)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var secret []byte
+	if value := os.Getenv("INK_TIDE_TICKET_SECRET"); value != "" {
+		secret, err = parseTicketSecret(value)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	if login != loginOff && len(secret) == 0 {
+		log.Fatal("INK_TIDE_TICKET_SECRET is required when -require-login is browser or all")
+	}
+	if login == loginOff {
+		log.Print("warning: account gate is off; set -require-login=browser where Paper serves the game")
+	}
+	relay := newRelay(Config{MaxRooms: *maxRooms, MaxConnections: *maxConnections, Login: login, TicketSecret: secret})
 	server := &http.Server{Addr: *addr, Handler: relay.handler(), ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 8192}
 	stop := make(chan os.Signal, 1)
 	shutdownDone := make(chan struct{})
@@ -42,8 +61,7 @@ func main() {
 			time.Sleep(5 * time.Millisecond)
 		}
 	}()
-	log.Printf("Ink Tide relay %s listening on %s; WebSocket /ws; health /healthz; capacity 4 per room", version, *addr)
-	var err error
+	log.Printf("Ink Tide relay %s listening on %s; WebSocket /ws; health /healthz; capacity 4 per room; login %s", version, *addr, login)
 	if *tlsCert != "" {
 		err = server.ListenAndServeTLS(*tlsCert, *tlsKey)
 	} else {
@@ -55,4 +73,11 @@ func main() {
 	if err == http.ErrServerClosed {
 		<-shutdownDone
 	}
+}
+
+func envValue(name, fallback string) string {
+	if value := os.Getenv(name); value != "" {
+		return value
+	}
+	return fallback
 }

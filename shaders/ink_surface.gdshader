@@ -19,7 +19,11 @@ uniform float wobble_speed : hint_range(1.0, 24.0) = 8.0;
 uniform float time_offset = 0.0;
 
 // Per-instance hit flash (used by enemies). Does not affect shared materials.
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+uniform float hit_flash = 0.0;
+#else
 instance uniform float hit_flash;
+#endif
 
 varying vec3 v_wpos;
 varying vec3 v_wnorm;
@@ -46,7 +50,11 @@ float value_noise(vec2 p) {
 float fbm(vec2 p) {
 	float v = 0.0;
 	float a = 0.5;
+	#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+	for (int i = 0; i < 2; i++) {
+	#else
 	for (int i = 0; i < 4; i++) {
+	#endif
 		v += value_noise(p) * a;
 		p = p * 2.03 + vec2(17.1, 9.7);
 		a *= 0.5;

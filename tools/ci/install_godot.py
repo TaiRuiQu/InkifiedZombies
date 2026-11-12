@@ -183,6 +183,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--version", required=True, help="Official stable release number, e.g. 4.7.2")
     parser.add_argument("--destination", required=True, type=Path, help="Editor installation and archive cache directory")
     parser.add_argument("--templates", action="store_true", help="Install this runner OS's x64 debug/release export templates")
+    parser.add_argument("--web-templates", action="store_true", help="Install single-threaded Web debug/release templates")
     arguments = parser.parse_args(argv)
     try:
         target = target_platform()
@@ -195,7 +196,7 @@ def main(argv: list[str] | None = None) -> int:
         checksums = read_manifest(f"{release_url}/SHA512-SUMS.txt")
         required_assets = [editor_archive]
         templates_archive = f"Godot_v{arguments.version}-stable_export_templates.tpz"
-        if arguments.templates:
+        if arguments.templates or arguments.web_templates:
             required_assets.append(templates_archive)
         for asset in required_assets:
             if asset not in checksums:
@@ -211,12 +212,15 @@ def main(argv: list[str] | None = None) -> int:
                 install_member(archive, selected_member(archive, wrapper_name),
                                destination, "godot_console.exe", executable=True)
         print(f"Godot executable: {engine}", flush=True)
-        if arguments.templates:
+        if arguments.templates or arguments.web_templates:
             template_zip = download_verified(f"{release_url}/{templates_archive}", cache / templates_archive,
                                              checksums[templates_archive])
             template_root = template_directory(arguments.version, target)
             with zipfile.ZipFile(template_zip) as archive:
-                for filename in templates:
+                selected_templates = list(templates) if arguments.templates else []
+                if arguments.web_templates:
+                    selected_templates.extend(("web_nothreads_debug.zip", "web_nothreads_release.zip"))
+                for filename in selected_templates:
                     installed = install_member(archive, selected_member(archive, filename), template_root,
                                                filename, executable=True)
                     print(f"Export template: {installed}", flush=True)

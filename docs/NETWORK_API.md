@@ -7,8 +7,8 @@
 ```text
 host_direct(port: int = 7777, nickname: String = "守墨人") -> Error
 join_direct(address: String, port: int = 7777, nickname: String = "守墨人") -> Error
-host_relay(address: String, room: String = "", password: String = "", nickname: String = "守墨人") -> Error
-join_relay(address: String, room: String, password: String = "", nickname: String = "守墨人") -> Error
+host_relay(address: String, room: String = "", password: String = "", nickname: String = "守墨人", ticket: String = "") -> Error
+join_relay(address: String, room: String, password: String = "", nickname: String = "守墨人", ticket: String = "") -> Error
 send(kind: String, data: Dictionary, target: int = 0) -> Error
 set_ready(ready: bool)
 set_player_name(nickname: String)
@@ -50,7 +50,7 @@ NET.message_received(sender: int, kind: String, data: Dictionary)
 
 ## 中转服务器封包
 
-首包：`{"op":"create"|"join","room":"CODE","password":"...","name":"..."}`。
+首包：`{"op":"create"|"join","room":"CODE","password":"...","name":"...","ticket":"可选 · Paper 账号票据"}`。Paper 部署的中转在浏览器连接（带 `Origin`）上要求 `ticket`：由同源页面向 Center 申请短时票据，`Browser.request_ticket()` 异步返回后经 `NET.host_relay/join_relay` 传入；桌面原生构建不带 `Origin`，仍可不登录直接中转。票据只在握手时校验，不进入房间名单、日志或转发数据。
 
 服务器欢迎：`{"op":"welcome","peer_id":1,"host_id":1,"room":"CODE","peers":[{"id":1,"name":"..."}]}`。
 

@@ -42,6 +42,7 @@ def main() -> None:
     args = parser.parse_args()
     godot = args.godot.resolve(strict=True)
     run(godot, "import", ["--editor", "--import", "--quit"])
+    run(godot, "web-compatibility", ["--rendering-method", "gl_compatibility", "--script", "res://tests/web_compatibility_audit.gd", "--", "--role=ci"], "failures=0")
     for script in TESTS:
         marker = "PASS" if script in ["tests/audio_audit.gd", "tests/enemy_hitbox_audit.gd"] else "failures=0"
         run(godot, Path(script).stem, ["--script", f"res://{script}", "--", "--role=ci"], marker)

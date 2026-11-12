@@ -35,7 +35,11 @@ float value_noise(vec2 p) {
 float fbm(vec2 p) {
 	float v = 0.0;
 	float a = 0.5;
+	#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+	for (int i = 0; i < 2; i++) {
+	#else
 	for (int i = 0; i < 4; i++) {
+	#endif
 		v += value_noise(p) * a;
 		p = p * 2.03 + vec2(5.1, 9.7);
 		a *= 0.5;

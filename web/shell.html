@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#e9e1cb">
+    <title>墨潮 · Ink Tide — Paper</title>
+    <link rel="stylesheet" href="shell.css">
+    $GODOT_HEAD_INCLUDE
+  </head>
+  <body data-state="idle">
+    <main id="stage">
+      <canvas id="canvas" tabindex="0" aria-label="墨潮游戏画面"></canvas>
+      <section id="loading" aria-labelledby="title">
+        <a class="paper-link" href="/">Paper / 片刻歇息</a>
+        <div class="cover">
+          <span class="seal" aria-hidden="true">墨</span>
+          <p class="eyebrow">INK TIDE</p>
+          <h1 id="title">墨潮</h1>
+          <p class="tagline">以墨为刃，独守长夜。</p>
+          <p id="message" role="status" aria-live="polite">进入庭院，守住十波墨潮。</p>
+          <progress id="progress" hidden aria-label="游戏加载进度"></progress>
+          <button id="start" type="button">进入墨境 <span aria-hidden="true">↗</span></button>
+          <p class="controls">WASD 移动 · 鼠标瞄准与射击 · E 疾风步 · Esc 暂停</p>
+          <p class="desktop-note">适合电脑键鼠游玩 · 首次进入需要下载游戏 · 单人试玩无需登录，好友同守需登录 Paper 账号</p>
+        </div>
+        <footer>墨未干，路未尽。<span>墨潮 · Ink Tide</span></footer>
+      </section>
+      <nav id="toolbar" aria-label="游戏页面操作" hidden>
+        <a href="/">返回 Paper</a>
+        <button id="fullscreen" type="button">全屏</button>
+      </nav>
+    </main>
+    <noscript>请启用 JavaScript 后进入墨境。</noscript>
+    <script id="godot-config" type="application/json">$GODOT_CONFIG</script>
+    <script src="bootstrap.js" data-engine-url="$GODOT_URL" defer></script>
+  </body>
+</html>

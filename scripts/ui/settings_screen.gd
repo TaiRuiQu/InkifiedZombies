@@ -108,12 +108,17 @@ func _tab(title: String) -> VBoxContainer:
 
 func _build_display(column: VBoxContainer) -> void:
 	_note(column, "清晰的墨线，适合你的视野。画质与帧率可随时调整。")
-	_option(column, "显示模式", "window_mode", ["窗口", "无边框全屏", "独占全屏"], [0, 1, 2])
-	_option(column, "窗口分辨率", "resolution", ["1280 × 720", "1600 × 900", "1920 × 1080", "2560 × 1440"], [0, 1, 2, 3])
-	_note(column, "全屏使用显示器原生分辨率。窗口尺寸会适配屏幕可用空间。", 13)
-	_option(column, "画质", "quality", ["流畅 · 75% 渲染 / 无阴影", "标准 · 100% 渲染 / 2× MSAA", "精细 · 100% 渲染 / 4× MSAA"], [0, 1, 2])
-	_option(column, "帧率上限", "fps_limit", ["60 FPS", "90 FPS", "120 FPS", "144 FPS", "165 FPS", "240 FPS", "不限"], [60, 90, 120, 144, 165, 240, 0])
-	_check(column, "垂直同步", "vsync")
+	if Browser.is_web():
+		_note(column, "使用页面右上角进入全屏；画质影响渲染清晰度。", 13)
+		_option(column, "画质", "quality", ["流畅 · 65% 渲染", "标准 · 80% 渲染", "精细 · 100% 渲染 / 2× MSAA"], [0, 1, 2])
+		_option(column, "帧率上限", "fps_limit", ["30 FPS", "60 FPS"], [30, 60])
+	else:
+		_option(column, "显示模式", "window_mode", ["窗口", "无边框全屏", "独占全屏"], [0, 1, 2])
+		_option(column, "窗口分辨率", "resolution", ["1280 × 720", "1600 × 900", "1920 × 1080", "2560 × 1440"], [0, 1, 2, 3])
+		_note(column, "全屏使用显示器原生分辨率。窗口尺寸会适配屏幕可用空间。", 13)
+		_option(column, "画质", "quality", ["流畅 · 75% 渲染 / 无阴影", "标准 · 100% 渲染 / 2× MSAA", "精细 · 100% 渲染 / 4× MSAA"], [0, 1, 2])
+		_option(column, "帧率上限", "fps_limit", ["60 FPS", "90 FPS", "120 FPS", "144 FPS", "165 FPS", "240 FPS", "不限"], [60, 90, 120, 144, 165, 240, 0])
+		_check(column, "垂直同步", "vsync")
 	_slider(column, "视野范围", "fov", 65, 105, 1, "°")
 	_note(column, "较大的视野可看见更多敌人；机瞄会按比例收窄视野。", 13)
 

@@ -8,15 +8,26 @@ const BRUSH_FONT: Font = preload("res://assets/fonts/MaShanZheng-Regular.ttf")
 const UI_FONT: Font = preload("res://assets/fonts/NotoSansSC.ttf")
 
 
+static func _bound_effect(parent: Node, effect: Node, group: String, capacity: int) -> void:
+	var existing := parent.get_tree().get_nodes_in_group(group)
+	while existing.size() >= capacity:
+		var oldest: Node = existing.pop_front()
+		oldest.remove_from_group(group)
+		oldest.queue_free()
+	effect.add_to_group(group)
+
+
 static func burst(parent: Node3D, pos: Vector3, color: Color, amount: int = 18,
 		speed: float = 5.0, size: float = 0.16, lifetime: float = 0.7,
 		gravity: Vector3 = Vector3(0, -9, 0)) -> void:
 	if parent == null or not parent.is_inside_tree():
 		return
 	var p := CPUParticles3D.new()
+	if Browser.is_web():
+		_bound_effect(parent, p, "web_bursts", 10)
 	p.one_shot = true
 	p.emitting = true
-	p.amount = amount
+	p.amount = clampi(roundi(amount * 0.55), 1, 18) if Browser.is_web() else amount
 	p.lifetime = lifetime
 	p.explosiveness = 0.92
 	p.direction = Vector3.UP
@@ -49,6 +60,8 @@ static func ring(parent: Node3D, pos: Vector3, radius: float, color: Color,
 	if parent == null or not parent.is_inside_tree():
 		return
 	var mi := MeshInstance3D.new()
+	if Browser.is_web():
+		_bound_effect(parent, mi, "web_rings", 18)
 	var torus := TorusMesh.new()
 	torus.inner_radius = 0.82
 	torus.outer_radius = 1.0
@@ -76,6 +89,8 @@ static func tracer(parent: Node3D, from: Vector3, to: Vector3, color: Color,
 	if dist < 0.05:
 		return
 	var mi := MeshInstance3D.new()
+	if Browser.is_web():
+		_bound_effect(parent, mi, "web_tracers", 48)
 	var mesh := BoxMesh.new()
 	mesh.size = Vector3(1, 1, 1)
 	mi.mesh = mesh
@@ -114,6 +129,8 @@ static func decal(parent: Node3D, pos: Vector3, normal: Vector3, size: float,
 	if parent == null or not parent.is_inside_tree():
 		return null
 	var mi := MeshInstance3D.new()
+	if Browser.is_web():
+		_bound_effect(parent, mi, "web_decals", 64)
 	var quad := QuadMesh.new()
 	quad.size = Vector2(size, size)
 	mi.mesh = quad
@@ -127,7 +144,7 @@ static func decal(parent: Node3D, pos: Vector3, normal: Vector3, size: float,
 	var basis := Basis(x, y, normal).rotated(normal, randf() * TAU)
 	mi.transform = Transform3D(basis, pos + normal * 0.012)
 	parent.add_child(mi)
-	_free_after(mi, 28.0)
+	_free_after(mi, 10.0 if Browser.is_web() else 28.0)
 	return mi
 
 
@@ -138,6 +155,8 @@ static func damage_number(parent: Node3D, pos: Vector3, amount: float,
 	if not Settings.get_value("damage_numbers"):
 		return
 	var label := Label3D.new()
+	if Browser.is_web():
+		_bound_effect(parent, label, "web_damage_numbers", 24)
 	label.text = str(int(round(amount)))
 	label.font = BRUSH_FONT if crit else UI_FONT
 	label.font_size = 86 if crit else 64

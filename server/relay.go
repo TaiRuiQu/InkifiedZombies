@@ -37,6 +37,9 @@ type Config struct {
 	IdleTimeout    time.Duration
 	PingInterval   time.Duration
 	WriteTimeout   time.Duration
+	// Login decides which clients must present a Center-signed room ticket.
+	Login        loginMode
+	TicketSecret []byte
 }
 
 func (c Config) defaults() Config {
@@ -66,6 +69,7 @@ type envelope struct {
 	Room     string          `json:"room,omitempty"`
 	Password string          `json:"password,omitempty"`
 	Name     string          `json:"name,omitempty"`
+	Ticket   string          `json:"ticket,omitempty"`
 	To       int             `json:"to,omitempty"`
 	From     int             `json:"from,omitempty"`
 	PeerID   int             `json:"peer_id,omitempty"`
@@ -100,14 +104,15 @@ type outgoing struct {
 }
 
 type peer struct {
-	conn  *websocket.Conn
-	id    int
-	name  string
-	room  *room
-	send  chan outgoing
-	done  chan struct{}
-	once  sync.Once
-	relay *relay
+	conn    *websocket.Conn
+	id      int
+	name    string
+	account string
+	room    *room
+	send    chan outgoing
+	done    chan struct{}
+	once    sync.Once
+	relay   *relay
 }
 
 func (p *peer) stop() { p.once.Do(func() { close(p.done); _ = p.conn.Close() }) }
@@ -163,7 +168,7 @@ func (h *relay) handler() http.Handler {
 		if closed {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		}
-		_ = json.NewEncoder(w).Encode(map[string]any{"ok": !closed, "version": version, "rooms": roomCount, "connections": h.connections.Load(), "room_capacity": roomCapacity})
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": !closed, "version": version, "rooms": roomCount, "connections": h.connections.Load(), "room_capacity": roomCapacity, "login": h.config.Login.String()})
 	})
 	return mux
 }
@@ -196,7 +201,8 @@ func (h *relay) serveWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	p := &peer{conn: conn, send: make(chan outgoing, sendQueueSize), done: make(chan struct{}), relay: h}
-	if err := h.attach(p, first); err != nil {
+	// Browsers always send an Origin header; native Godot clients do not.
+	if err := h.attach(p, first, r.Header.Get("Origin") != ""); err != nil {
 		var problem *protocolError
 		if errors.As(err, &problem) {
 			h.reject(conn, problem.code, problem.message)
@@ -273,12 +279,38 @@ func randomCode() (string, error) {
 	return string(bytes[:]), nil
 }
 
-func (h *relay) attach(p *peer, request envelope) error {
+// authorize enforces the account gate and, when a ticket is accepted, takes the
+// player's display name from the signed payload instead of the request.
+func (h *relay) authorize(p *peer, raw string, browser bool) error {
+	required := h.config.Login == loginAll || (h.config.Login == loginWeb && browser)
+	if h.config.Login == loginOff {
+		return nil
+	}
+	if raw == "" {
+		if required {
+			return issue("login_required", "Sign in to Paper before creating or joining an online room")
+		}
+		return nil
+	}
+	claims, err := verifyTicket(h.config.TicketSecret, raw, time.Now())
+	if err != nil {
+		// An unreadable ticket never degrades into an anonymous session.
+		return err
+	}
+	p.account = claims.Account
+	p.name = cleanName(ticketName(claims.Name))
+	return nil
+}
+
+func (h *relay) attach(p *peer, request envelope, browser bool) error {
 	if request.Op != "create" && request.Op != "join" {
 		return issue("handshake_required", "First operation must be create or join")
 	}
 	if len(request.Password) > 512 {
 		return issue("password_too_long", "Password exceeds 512 UTF-8 bytes")
+	}
+	if err := h.authorize(p, request.Ticket, browser); err != nil {
+		return err
 	}
 	code := strings.ToUpper(strings.TrimSpace(request.Room))
 	if code != "" && !roomPattern.MatchString(code) {
@@ -327,7 +359,9 @@ func (h *relay) attach(p *peer, request envelope) error {
 		p.id = target.nextID
 		target.nextID++
 	}
-	p.name = cleanName(request.Name)
+	if p.account == "" {
+		p.name = cleanName(request.Name)
+	}
 	p.room = target
 	target.peers[p.id] = p
 	roster := make([]peerInfo, 0, len(target.peers))

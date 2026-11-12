@@ -36,6 +36,7 @@ var _save_timer: Timer
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	values = platform_defaults()
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--smoke") or argument.begins_with("--role=") or argument in ["--beta-test", "--autoshot", "--gallery"]:
 			save_path = "user://test_settings.cfg"
@@ -74,7 +75,7 @@ func _validated(key: String, value: Variant) -> Variant:
 	if fallback is bool:
 		return bool(value)
 	if key == "fps_limit":
-		return int(value) if int(value) in [0, 60, 90, 120, 144, 165, 240] else 120
+		return int(value) if int(value) in [0, 30, 60, 90, 120, 144, 165, 240] else (60 if Browser.is_web() else 120)
 	if LIMITS.has(key):
 		var bounds: Vector2 = LIMITS[key]
 		var number: float = float(value)
@@ -89,7 +90,7 @@ func apply_all() -> void:
 	apply_audio()
 	_apply_display()
 	_apply_quality()
-	Engine.max_fps = int(values.fps_limit)
+	_apply_fps()
 
 
 func _apply(key: String) -> void:
@@ -98,7 +99,7 @@ func _apply(key: String) -> void:
 	elif key in ["window_mode", "resolution", "vsync"]:
 		_apply_display()
 	elif key == "fps_limit":
-		Engine.max_fps = int(values.fps_limit)
+		_apply_fps()
 	elif key == "quality":
 		_apply_quality()
 		if is_instance_valid(get_tree().current_scene):
@@ -111,7 +112,7 @@ func apply_audio() -> void:
 			AudioServer.add_bus()
 			AudioServer.set_bus_name(AudioServer.bus_count - 1, bus)
 			AudioServer.set_bus_send(AudioServer.get_bus_index(bus), "Master")
-	_set_bus("Master", float(values.master_volume))
+	_set_bus("Master", float(values.master_volume) * (0.75 if Browser.is_web() else 1.0))
 	_set_bus("Ink", float(values.sfx_volume))
 	_set_bus("Ambient", float(values.ambient_volume))
 	_set_bus("Music", float(values.music_volume))
@@ -124,7 +125,7 @@ func _set_bus(bus: String, volume: float) -> void:
 
 
 func _apply_display() -> void:
-	if DisplayServer.get_name() == "headless":
+	if Browser.is_web() or DisplayServer.get_name() == "headless":
 		return
 	var mode: int = int(values.window_mode)
 	if mode == 0:
@@ -146,19 +147,33 @@ func _apply_display() -> void:
 func _apply_quality() -> void:
 	var viewport: Viewport = get_viewport()
 	var quality: int = int(values.quality)
-	viewport.scaling_3d_scale = [0.75, 1.0, 1.0][quality]
-	viewport.msaa_3d = [Viewport.MSAA_DISABLED, Viewport.MSAA_2X, Viewport.MSAA_4X][quality]
-	viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA
-	viewport.positional_shadow_atlas_size = [1024, 2048, 4096][quality]
+	viewport.scaling_3d_scale = [0.65, 0.8, 1.0][quality] if Browser.is_web() else [0.75, 1.0, 1.0][quality]
+	viewport.msaa_3d = [Viewport.MSAA_DISABLED, Viewport.MSAA_DISABLED, Viewport.MSAA_2X][quality] if Browser.is_web() else [Viewport.MSAA_DISABLED, Viewport.MSAA_2X, Viewport.MSAA_4X][quality]
+	viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED if Browser.is_compatibility() else Viewport.SCREEN_SPACE_AA_FXAA
+	viewport.positional_shadow_atlas_size = 1024 if Browser.is_web() else [1024, 2048, 4096][quality]
+
+
+func platform_defaults() -> Dictionary:
+	var defaults := DEFAULTS.duplicate(true)
+	if Browser.is_web():
+		defaults.fps_limit = 60
+	return defaults
+
+
+func _apply_fps() -> void:
+	var limit := int(values.fps_limit)
+	Engine.max_fps = mini(limit, 60) if Browser.is_web() and limit > 0 else (60 if Browser.is_web() else limit)
 
 
 func apply_scene(node: Node) -> void:
 	if node is Light3D:
 		if not node.has_meta("settings_default_shadow"):
 			node.set_meta("settings_default_shadow", node.shadow_enabled)
-		node.shadow_enabled = bool(node.get_meta("settings_default_shadow")) and int(values.quality) > 0
+		node.shadow_enabled = bool(node.get_meta("settings_default_shadow")) and int(values.quality) > (1 if Browser.is_web() else 0)
+		if Browser.is_web() and node is DirectionalLight3D:
+			node.directional_shadow_max_distance = 35.0
 	if node is WorldEnvironment and node.environment:
-		node.environment.glow_enabled = int(values.quality) > 0
+		node.environment.glow_enabled = int(values.quality) > 0 and not Browser.is_web()
 	for child: Node in node.get_children():
 		apply_scene(child)
 
@@ -226,7 +241,7 @@ func _same_binding(a: InputEvent, b: InputEvent) -> bool:
 
 
 func reset_defaults() -> void:
-	values = DEFAULTS.duplicate(true)
+	values = platform_defaults()
 	for action: String in _default_bindings:
 		InputMap.action_erase_events(action)
 		for event: InputEvent in _default_bindings[action]:
@@ -269,7 +284,7 @@ func load_preferences() -> void:
 	if cfg.load(save_path) != OK:
 		return
 	for key: String in DEFAULTS:
-		values[key] = _validated(key, cfg.get_value("settings", key, DEFAULTS[key]))
+		values[key] = _validated(key, cfg.get_value("settings", key, values[key]))
 	# Validate the complete candidate map before changing InputMap. A damaged
 	# record must never silently leave two gameplay actions on the same key.
 	var candidates: Dictionary = {}

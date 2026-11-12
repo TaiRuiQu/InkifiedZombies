@@ -53,6 +53,52 @@ func build(id: String = "") -> void:
 	detail_pass.name = "ArchitecturalDetails"
 	add_child(detail_pass)
 	detail_pass.build(self, definition)
+	if OS.has_feature("web"):
+		_batch_static_geometry()
+
+
+func _batch_static_geometry() -> void:
+	# Only static leaf meshes are replaced. Lights, named landmarks, moving sky,
+	# world collision and gameplay objects keep their existing nodes.
+	var groups: Dictionary = {}
+	_collect_static_geometry(self, groups)
+	var local_space := global_transform.affine_inverse()
+	for group: Array in groups.values():
+		if group.size() < 3:
+			continue
+		var first := group[0] as MeshInstance3D
+		var instances := MultiMesh.new()
+		instances.transform_format = MultiMesh.TRANSFORM_3D
+		instances.mesh = first.mesh
+		instances.instance_count = group.size()
+		var batch := MultiMeshInstance3D.new()
+		batch.name = "WebStaticBatch"
+		batch.multimesh = instances
+		batch.material_override = first.material_override
+		batch.cast_shadow = first.cast_shadow
+		batch.layers = first.layers
+		add_child(batch)
+		for index in group.size():
+			var part := group[index] as MeshInstance3D
+			instances.set_instance_transform(index, local_space * part.global_transform)
+			part.get_parent().remove_child(part)
+			part.free()
+
+
+func _collect_static_geometry(node: Node, groups: Dictionary) -> void:
+	for child in node.get_children():
+		if child == _dome:
+			continue
+		if child is MeshInstance3D and child.get_child_count() == 0:
+			var material := child.material_override as ShaderMaterial
+			if material and material.shader == Ink.SURFACE_SHADER and child.mesh:
+				# Keep batches spatially bounded so offscreen portions can be culled.
+				var position_in_map: Vector3 = to_local(child.global_position)
+				var key := "%d:%d:%d:%d:%d:%d" % [child.mesh.get_instance_id(), material.get_instance_id(), floori(position_in_map.x / 16.0), floori(position_in_map.z / 16.0), child.cast_shadow, child.layers]
+				if not groups.has(key):
+					groups[key] = []
+				(groups[key] as Array).append(child)
+		_collect_static_geometry(child, groups)
 
 
 func _process(delta: float) -> void:
@@ -931,9 +977,9 @@ func _build_atmosphere() -> void:
 	# Drifting ash.
 	var ash := CPUParticles3D.new()
 	ash.position = Vector3(0, 5.5, 0)
-	ash.amount = 110
+	ash.amount = 32 if OS.has_feature("web") else 110
 	ash.lifetime = 16.0
-	ash.preprocess = 6.0
+	ash.preprocess = 0.0 if OS.has_feature("web") else 6.0
 	ash.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
 	ash.emission_box_extents = Vector3(30, 7, 30)
 	ash.direction = Vector3(0.2, -1, 0.15)
@@ -952,9 +998,9 @@ func _build_atmosphere() -> void:
 	# Heavy ink flakes.
 	var flakes := CPUParticles3D.new()
 	flakes.position = Vector3(0, 6.0, 0)
-	flakes.amount = 28
+	flakes.amount = 10 if OS.has_feature("web") else 28
 	flakes.lifetime = 18.0
-	flakes.preprocess = 4.0
+	flakes.preprocess = 0.0 if OS.has_feature("web") else 4.0
 	flakes.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
 	flakes.emission_box_extents = Vector3(28, 6, 28)
 	flakes.direction = Vector3(-0.3, -1, 0.2)

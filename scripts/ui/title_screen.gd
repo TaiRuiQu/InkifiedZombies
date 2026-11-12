@@ -13,6 +13,7 @@ var _start: InkButton
 var _quit: InkButton
 var _hint: Label
 var _selectors: Dictionary = {}
+var _foot: Label
 var _preview_title: Label
 var _preview_description: Label
 
@@ -23,6 +24,7 @@ func _ready() -> void:
 	visible = false
 	_build()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	Browser.account_changed.connect(_refresh_account_note)
 
 
 func _build() -> void:
@@ -101,8 +103,10 @@ func _build() -> void:
 	_quit.pressed.connect(_request_quit)
 	_root.add_child(_quit)
 	var foot := UITheme.body("空格 / Enter 独守 · 同守支持好友直连与中转", 12, UITheme.MUTED)
+	_foot = foot
 	foot.position = Vector2(104, 861)
 	_root.add_child(foot)
+	_refresh_account_note()
 	var side := UITheme.brush("十 波 墨 劫", 26, UITheme.PAPER)
 	side.add_theme_constant_override("outline_size", 8)
 	side.add_theme_color_override("font_outline_color", UITheme.INK)
@@ -184,6 +188,19 @@ func _request_start() -> void:
 
 func _request_multiplayer() -> void:
 	multiplayer_requested.emit()
+
+
+func _refresh_account_note() -> void:
+	if _foot == null:
+		return
+	if not Browser.account_required():
+		_foot.text = "空格 / Enter 独守 · 同守支持好友直连与中转"
+	elif Browser.account_signed_in():
+		_foot.text = "已登录 Paper · 空格 / Enter 独守 · 同守可直接创建房间"
+	elif String(Browser.account.get("state", "")) == "loading":
+		_foot.text = "空格 / Enter 独守 · 正在确认 Paper 登录状态"
+	else:
+		_foot.text = "空格 / Enter 独守 · 同守需先登录 Paper 账号"
 
 
 func _request_settings() -> void:

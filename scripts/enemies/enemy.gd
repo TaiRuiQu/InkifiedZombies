@@ -58,6 +58,7 @@ var _hit_react_strength := 0.0
 
 var visual: Node3D
 var parts: Array[MeshInstance3D] = []
+var _flash_materials: Array[ShaderMaterial] = []
 var anim: Dictionary = {}
 var aura: MeshInstance3D
 var hitboxes: Array[Area3D] = []
@@ -746,6 +747,10 @@ func notify_hit_reaction(direction: Vector3, amount: float, critical: bool = fal
 
 
 func _apply_flash() -> void:
+	if Browser.is_compatibility():
+		for material in _flash_materials:
+			material.set_shader_parameter("hit_flash", flash)
+		return
 	for p in parts:
 		if is_instance_valid(p):
 			p.set_instance_shader_parameter("hit_flash", flash)
@@ -854,6 +859,20 @@ func _build_visual() -> void:
 	parts = factory.parts
 	anim = factory.anim
 	aura = factory.aura
+	if Browser.is_compatibility():
+		# Clone once per original material per actor, after visual batching.
+		# Static geometry and other enemies retain their shared, unmodified paint.
+		var copies: Dictionary = {}
+		for part in parts:
+			var original := part.material_override as ShaderMaterial
+			if original == null or original.shader != Ink.SURFACE_SHADER:
+				continue
+			var key := original.get_instance_id()
+			if not copies.has(key):
+				var copy := original.duplicate() as ShaderMaterial
+				copies[key] = copy
+				_flash_materials.append(copy)
+			part.material_override = copies[key]
 
 
 # --------------------------------------------------------------------------

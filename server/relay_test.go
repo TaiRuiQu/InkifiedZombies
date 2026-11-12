@@ -1,6 +1,9 @@
 package main
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"github.com/gorilla/websocket"
 	"net/http"
@@ -20,7 +23,11 @@ func testRelay(t *testing.T, c Config) (*relay, string) {
 }
 func connect(t *testing.T, endpoint string, first envelope) (*websocket.Conn, envelope) {
 	t.Helper()
-	conn, _, err := websocket.DefaultDialer.Dial(endpoint, nil)
+	return connectHeader(t, endpoint, first, nil)
+}
+func connectHeader(t *testing.T, endpoint string, first envelope, header http.Header) (*websocket.Conn, envelope) {
+	t.Helper()
+	conn, _, err := websocket.DefaultDialer.Dial(endpoint, header)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -203,6 +210,87 @@ func TestHandshakeTimeout(t *testing.T) {
 	}
 }
 
+func signTicket(t *testing.T, secret []byte, claims ticket) string {
+	t.Helper()
+	payload, err := json.Marshal(claims)
+	if err != nil {
+		t.Fatal(err)
+	}
+	segment := base64.RawURLEncoding.EncodeToString(payload)
+	mac := hmac.New(sha256.New, secret)
+	mac.Write([]byte(segment))
+	return segment + "." + base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+}
+
+func browserHeader(endpoint string) http.Header {
+	// Browsers send an Origin for the page host; Caddy preserves that host, so a
+	// passing test origin must match the test server's own host.
+	return http.Header{"Origin": []string{"http" + strings.TrimSuffix(strings.TrimPrefix(endpoint, "ws"), "/ws")}}
+}
+
+func TestBrowserRoomsRequireACenterTicket(t *testing.T) {
+	secret := []byte(strings.Repeat("k", 32))
+	_, endpoint := testRelay(t, Config{Login: loginWeb, TicketSecret: secret})
+	header := browserHeader(endpoint)
+	if _, denied := connectHeader(t, endpoint, envelope{Op: "create"}, header); denied.Code != "login_required" {
+		t.Fatalf("anonymous browser create was not rejected: %+v", denied)
+	}
+	if _, invalid := connectHeader(t, endpoint, envelope{Op: "create", Ticket: "not-a-ticket"}, header); invalid.Code != "ticket_invalid" {
+		t.Fatalf("malformed ticket was not rejected: %+v", invalid)
+	}
+	expired := signTicket(t, secret, ticket{Version: 1, Account: "user-1", Name: "守夜人", Expires: time.Now().Unix() - 1})
+	if _, reply := connectHeader(t, endpoint, envelope{Op: "create", Ticket: expired}, header); reply.Code != "ticket_expired" {
+		t.Fatalf("expired ticket was not rejected: %+v", reply)
+	}
+	valid := signTicket(t, secret, ticket{Version: 1, Account: "user-1", Name: "墨客甲", Expires: time.Now().Unix() + 60})
+	host, welcome := connectHeader(t, endpoint, envelope{Op: "create", Ticket: valid, Name: "伪造昵称"}, header)
+	if welcome.Op != "welcome" || welcome.Peers[0].Name != "墨客甲" {
+		t.Fatalf("ticket did not establish host identity: %+v", welcome)
+	}
+	guestTicket := signTicket(t, secret, ticket{Version: 1, Account: "user-2", Name: "墨客乙", Expires: time.Now().Unix() + 60})
+	_, joined := connectHeader(t, endpoint, envelope{Op: "join", Room: welcome.Room, Ticket: guestTicket}, header)
+	if joined.Op != "welcome" || joined.PeerID != 2 {
+		t.Fatalf("ticketed guest could not join: %+v", joined)
+	}
+	if expectOp(t, host, "peer_joined").PeerID != 2 {
+		t.Fatal("host was not told about the ticketed guest")
+	}
+	// A signed payload naming another account still works, but only with the
+	// shared secret; a client cannot forge one without it.
+	forged := signTicket(t, []byte(strings.Repeat("x", 32)), ticket{Version: 1, Account: "user-3", Name: "伪客", Expires: time.Now().Unix() + 60})
+	if _, reply := connectHeader(t, endpoint, envelope{Op: "create", Ticket: forged}, header); reply.Code != "ticket_invalid" {
+		t.Fatalf("ticket signed with another secret was accepted: %+v", reply)
+	}
+}
+
+func TestDesktopClientsKeepNativeRelayPlay(t *testing.T) {
+	secret := []byte(strings.Repeat("k", 32))
+	_, endpoint := testRelay(t, Config{Login: loginWeb, TicketSecret: secret})
+	// Native Godot clients send no Origin header and remain unaffected.
+	if _, welcome := connect(t, endpoint, envelope{Op: "create", Name: "桌面守夜人"}); welcome.Op != "welcome" {
+		t.Fatalf("native client was blocked: %+v", welcome)
+	}
+}
+
+func TestStrictModeRequiresTicketsForEveryClient(t *testing.T) {
+	secret := []byte(strings.Repeat("k", 32))
+	_, endpoint := testRelay(t, Config{Login: loginAll, TicketSecret: secret})
+	if _, denied := connect(t, endpoint, envelope{Op: "create"}); denied.Code != "login_required" {
+		t.Fatalf("anonymous native create was not rejected: %+v", denied)
+	}
+	valid := signTicket(t, secret, ticket{Version: 1, Account: "user-1", Name: "守夜人", Expires: time.Now().Unix() + 60})
+	if _, welcome := connect(t, endpoint, envelope{Op: "create", Ticket: valid}); welcome.Op != "welcome" {
+		t.Fatalf("ticketed native client was blocked: %+v", welcome)
+	}
+}
+
+func TestOpenRelayIgnoresTickets(t *testing.T) {
+	_, endpoint := testRelay(t, Config{})
+	if _, welcome := connectHeader(t, endpoint, envelope{Op: "create", Ticket: "garbage"}, browserHeader(endpoint)); welcome.Op != "welcome" {
+		t.Fatalf("open relay rejected a browser client: %+v", welcome)
+	}
+}
+
 func TestHealthEndpoint(t *testing.T) {
 	_, endpoint := testRelay(t, Config{})
 	response, err := http.Get("http" + strings.TrimSuffix(strings.TrimPrefix(endpoint, "ws"), "/ws") + "/healthz")
@@ -214,7 +302,7 @@ func TestHealthEndpoint(t *testing.T) {
 	if err := json.NewDecoder(response.Body).Decode(&info); err != nil {
 		t.Fatal(err)
 	}
-	if response.StatusCode != http.StatusOK || info["ok"] != true || info["room_capacity"] != float64(4) {
+	if response.StatusCode != http.StatusOK || info["ok"] != true || info["room_capacity"] != float64(4) || info["login"] != "off" {
 		t.Fatal(info)
 	}
 }

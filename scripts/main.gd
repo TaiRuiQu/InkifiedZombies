@@ -47,6 +47,7 @@ func _ready() -> void:
 	_build_ui()
 	_build_title_camera()
 	_connect()
+	Browser.interrupted.connect(_on_browser_interrupted)
 	Coop.setup(self)
 	Settings.apply_scene(self)
 	_dev = load("res://scripts/dev/dev_scenarios.gd").new(self)
@@ -450,6 +451,11 @@ func _notification(what: int) -> void:
 		_quit_game()
 
 
+func _on_browser_interrupted() -> void:
+	if Game.state == Game.State.PLAYING and is_instance_valid(pause) and not pause.visible and not _dying:
+		_open_pause()
+
+
 func _exit_tree() -> void:
 	if Coop.main == self:
 		Coop.clear_run()
@@ -497,6 +503,8 @@ func _quit_game() -> void:
 	NET.leave()
 	Sfx.shutdown()
 	await get_tree().create_timer(0.12, true).timeout
+	if Browser.is_web():
+		Browser.return_to_paper()
 	get_tree().quit()
 
 

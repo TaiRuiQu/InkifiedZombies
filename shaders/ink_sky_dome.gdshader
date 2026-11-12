@@ -60,7 +60,11 @@ float value_noise3(vec3 p) {
 float fbm3(vec3 p) {
 	float v = 0.0;
 	float a = 0.5;
+	#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+	for (int i = 0; i < 2; i++) {
+	#else
 	for (int i = 0; i < 4; i++) {
+	#endif
 		v += value_noise3(p) * a;
 		p = p * 2.03 + vec3(4.7, 9.1, 2.3);
 		a *= 0.5;

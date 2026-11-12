@@ -17,6 +17,8 @@ var _password: LineEdit
 var _status: Label
 var _session: Label
 var _members: VBoxContainer
+var _account: Label
+var _login_button: Button
 var _ready_button: Button
 var _start_button: Button
 var _disconnect: Button
@@ -26,6 +28,10 @@ var _connect_buttons: Array[Button] = []
 var _busy := false
 var _last_roster := ""
 var _launch_requested := false
+var _pending_action := ""
+var _pending_address := ""
+var _pending_room := ""
+var _pending_password := ""
 
 
 func _ready() -> void:
@@ -39,6 +45,8 @@ func _ready() -> void:
 	NET.latency_updated.connect(_refresh)
 	NET.peer_joined.connect(_on_peer_changed)
 	NET.peer_left.connect(_on_peer_changed)
+	Browser.account_changed.connect(_on_account_changed)
+	Browser.ticket_received.connect(_on_ticket_received)
 
 
 func _build() -> void:
@@ -85,6 +93,8 @@ func _build() -> void:
 	run_note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	run_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	profile.add_child(run_note)
+	if Browser.account_required():
+		_build_account(layout)
 	# Keep the main area scrollable at small window sizes without losing actions.
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -101,6 +111,9 @@ func _build() -> void:
 	body.add_child(_tabs)
 	_build_direct(_tab("直 连"))
 	_build_relay(_tab("中 转"))
+	if Browser.is_web():
+		_tabs.set_tab_hidden(0, true)
+		_tabs.current_tab = 1
 	var lobby := VBoxContainer.new()
 	lobby.custom_minimum_size.x = 360
 	lobby.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -126,7 +139,7 @@ func _build() -> void:
 	_start_button = _button("开 始 同 守", _request_start)
 	lobby.add_child(_start_button)
 	_note(lobby, "房主可独自试开；有好友加入后，需所有好友就绪再出发。", 13)
-	_status = UITheme.body("选择直连或中转，创建房间或加入好友。", 15, UITheme.INDIGO)
+	_status = UITheme.body("登录 Paper 账号后创建房间；单人试玩随时可以开始。" if Browser.is_web() else "选择直连或中转，创建房间或加入好友。", 15, UITheme.INDIGO)
 	_status.custom_minimum_size.y = 52
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	layout.add_child(_status)
@@ -144,6 +157,116 @@ func _build() -> void:
 	_back.custom_minimum_size.x = 190
 	footer.add_child(_back)
 	_refresh()
+
+
+func _build_account(layout: VBoxContainer) -> void:
+	# Online rooms belong to Paper accounts; single-player never reaches here.
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 16)
+	layout.add_child(row)
+	var title := UITheme.body("Paper 账号", 16)
+	title.custom_minimum_size.x = 100
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(title)
+	_account = UITheme.body("正在确认登录状态…", 14, UITheme.MUTED)
+	_account.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_account.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_account.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	row.add_child(_account)
+	_login_button = _button("登 录 Paper", _open_login)
+	_login_button.custom_minimum_size = Vector2(170, 42)
+	row.add_child(_login_button)
+	_refresh_account_ui()
+
+
+func _open_login() -> void:
+	if not Browser.account_required():
+		return
+	Browser.open_login()
+	_set_status("在 Paper 登录窗口完成登录；回到本页后账号状态会自动更新。")
+
+
+func _refresh_account_ui() -> void:
+	if _account == null:
+		return
+	var state := String(Browser.account.get("state", ""))
+	if Browser.account_signed_in():
+		_account.text = "已登录 · %s\n可直接创建房间，邀请好友同守。" % Browser.account_name()
+		_account.add_theme_color_override("font_color", UITheme.INDIGO)
+		_login_button.text = "更 换 账 号"
+		_login_button.visible = true
+		return
+	match state:
+		"loading":
+			_account.text = "正在确认登录状态…"
+			_account.add_theme_color_override("font_color", UITheme.MUTED)
+			_login_button.text = "重 新 检 查"
+		"unavailable":
+			_account.text = "暂时无法读取 Paper 登录状态；单人试玩不受影响。"
+			_account.add_theme_color_override("font_color", UITheme.CINNABAR)
+			_login_button.text = "重 新 检 查"
+		_:
+			_account.text = "未登录 · 可继续单人试玩；登录后可创建房间与好友联机。"
+			_account.add_theme_color_override("font_color", UITheme.MUTED)
+			_login_button.text = "登 录 Paper"
+	_login_button.visible = true
+
+
+func _on_account_changed() -> void:
+	_refresh_account_ui()
+	if Browser.account_signed_in() and is_instance_valid(_nickname):
+		var suggested := Browser.account_name().strip_edges().left(24)
+		var current := _nickname.text.strip_edges()
+		if not suggested.is_empty() and (current.is_empty() or current == "守墨人"):
+			_nickname.text = suggested
+	_refresh()
+
+
+func _on_ticket_received(result: Dictionary) -> void:
+	if _pending_action.is_empty():
+		return
+	var action := _pending_action
+	var address := _pending_address
+	var room := _pending_room
+	var password := _pending_password
+	_clear_pending()
+	if not bool(result.get("ok", false)):
+		_busy = false
+		_status_error(String(result.get("error", "")))
+		_refresh()
+		return
+	var ticket := String(result.get("ticket", ""))
+	if ticket.is_empty():
+		_busy = false
+		_set_status("未能取得联机凭证，请重试。", true)
+		_refresh()
+		return
+	if action == "host":
+		NET.host_relay(address, room, password, _player_name(), ticket)
+	else:
+		NET.join_relay(address, room, password, _player_name(), ticket)
+
+
+func _status_error(code: String) -> void:
+	match code:
+		"login_required":
+			_set_status("登录状态已失效，请重新登录 Paper 账号后再创建房间。", true)
+			Browser.refresh_account()
+		"ink_tide_auth_unavailable":
+			_set_status("联机登录校验尚未配置，请联系管理员；单人试玩不受影响。", true)
+		"network":
+			_set_status("无法连接 Paper 登录服务，请检查网络后重试。", true)
+		"ticket_failed":
+			_set_status("联机凭证签发失败，请稍后重试。", true)
+		_:
+			_set_status("未能取得联机凭证（%s），请稍后重试。" % code, true)
+
+
+func _clear_pending() -> void:
+	_pending_action = ""
+	_pending_address = ""
+	_pending_room = ""
+	_pending_password = ""
 
 
 func _tab(title: String) -> VBoxContainer:
@@ -189,7 +312,9 @@ func _build_direct(column: VBoxContainer) -> void:
 
 func _build_relay(column: VBoxContainer) -> void:
 	_note(column, "通过好友或自建的中转服务相聚，无需房主开放本地端口。")
-	_relay = _edit("127.0.0.1", "服务器 IP，例如 203.0.113.10；也支持 ws:// 地址", 512)
+	if Browser.is_web():
+		_note(column, "浏览器房主请保持此页面在前台；切换标签页会影响队伍。", 13)
+	_relay = _edit(Browser.default_relay_url(), "中转服务器地址", 512)
 	_field(column, "中转地址", _relay)
 	_room = _edit("", "创建可留空；自定义码 4–16 位", 16)
 	_field(column, "房间码", _room)
@@ -282,6 +407,11 @@ func _player_name() -> String:
 func _can_connect() -> bool:
 	if not visible or NET.active or NET.connecting or _busy:
 		return false
+	if Browser.account_required() and not Browser.account_signed_in():
+		_set_status("联机需先登录 Paper 账号；单人试玩随时可以开始。", true)
+		if _login_button:
+			_login_button.grab_focus()
+		return false
 	return true
 
 
@@ -333,8 +463,7 @@ func _host_relay() -> void:
 	var room := _validated_room(true)
 	if room == "!invalid":
 		return
-	_begin_connection("正在连接中转服务并创建房间…")
-	NET.host_relay(address, room, _password.text, _player_name())
+	_connect_relay(true, address, room)
 
 
 func _join_relay() -> void:
@@ -346,8 +475,28 @@ func _join_relay() -> void:
 	var room := _validated_room(false)
 	if room == "!invalid":
 		return
-	_begin_connection("正在加入中转房间 %s…" % room)
-	NET.join_relay(address, room, _password.text, _player_name())
+	_connect_relay(false, address, room)
+
+
+func _connect_relay(hosting: bool, address: String, room: String) -> void:
+	_begin_connection("正在连接中转服务并创建房间…" if hosting else "正在加入中转房间 %s…" % room)
+	# Paper-served builds attach a short-lived account ticket to the handshake.
+	if Browser.account_required():
+		_pending_action = "host" if hosting else "join"
+		_pending_address = address
+		_pending_room = room
+		_pending_password = _password.text
+		if Browser.request_ticket():
+			return
+		_clear_pending()
+		_busy = false
+		_set_status("当前页面无法取得联机凭证，请刷新后重试。", true)
+		_refresh()
+		return
+	if hosting:
+		NET.host_relay(address, room, _password.text, _player_name())
+	else:
+		NET.join_relay(address, room, _password.text, _player_name())
 
 
 func _validated_room(allow_empty: bool) -> String:
@@ -372,7 +521,7 @@ func _on_connected() -> void:
 	_busy = false
 	for index in _tabs.get_tab_count():
 		_tabs.set_tab_disabled(index, false)
-	_tabs.current_tab = 1 if NET.mode == "relay" else 0
+	_tabs.current_tab = 1 if Browser.is_web() or NET.mode == "relay" else 0
 	if NET.mode == "relay":
 		_room.text = NET.room_code
 	_set_status("房间已建立，等待好友加入。" if NET.is_host else "已加入房间。准备就绪后，等待房主开始。")
@@ -394,10 +543,13 @@ func _set_status(text: String, error: bool = false) -> void:
 func _refresh() -> void:
 	if _disconnect == null:
 		return
+	_refresh_account_ui()
 	var connected: bool = NET.active
 	var locked: bool = connected or NET.connecting or _busy
 	for button: Button in _connect_buttons:
 		button.disabled = locked
+	if _login_button:
+		_login_button.disabled = locked
 	for edit: LineEdit in [_nickname, _ip, _relay, _room, _password]:
 		edit.editable = not locked
 	_port.editable = not locked
@@ -516,6 +668,7 @@ func _leave() -> void:
 	_busy = false
 	_launch_requested = false
 	_last_roster = ""
+	_clear_pending()
 	_set_status("已离开房间，可以重新创建或加入。")
 	_refresh()
 
@@ -524,6 +677,9 @@ func open() -> void:
 	visible = true
 	_launch_requested = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	# A player may have logged in through another tab while playing.
+	Browser.refresh_account()
+	_refresh_account_ui()
 	if NET.active:
 		_nickname.text = NET.player_name
 		if NET.mode == "relay":

@@ -49,6 +49,8 @@ func _ready() -> void:
 
 
 func host_direct(port: int = DIRECT_PORT, nickname: String = "守墨人") -> Error:
+	if Browser.is_web():
+		return _reject("浏览器请使用中转房间。", ERR_UNAVAILABLE)
 	leave()
 	if port < 1 or port > 65535:
 		return _reject("端口必须在 1–65535 之间。", ERR_INVALID_PARAMETER)
@@ -71,6 +73,8 @@ func host_direct(port: int = DIRECT_PORT, nickname: String = "守墨人") -> Err
 
 func join_direct(host_address: String, port: int = DIRECT_PORT,
 		nickname: String = "守墨人") -> Error:
+	if Browser.is_web():
+		return _reject("浏览器请使用中转房间。", ERR_UNAVAILABLE)
 	leave()
 	var clean_address := host_address.strip_edges()
 	if clean_address.is_empty() or port < 1 or port > 65535:
@@ -89,24 +93,26 @@ func join_direct(host_address: String, port: int = DIRECT_PORT,
 
 
 func host_relay(server_address: String, room: String = "", password: String = "",
-		nickname: String = "守墨人") -> Error:
-	return _begin_relay(server_address, room, password, nickname, true)
+		nickname: String = "守墨人", ticket: String = "") -> Error:
+	return _begin_relay(server_address, room, password, nickname, true, ticket)
 
 
 func join_relay(server_address: String, room: String, password: String = "",
-		nickname: String = "守墨人") -> Error:
+		nickname: String = "守墨人", ticket: String = "") -> Error:
 	if room.strip_edges().is_empty():
 		return _reject("请输入房间码。", ERR_INVALID_PARAMETER)
-	return _begin_relay(server_address, room, password, nickname, false)
+	return _begin_relay(server_address, room, password, nickname, false, ticket)
 
 
 func _begin_relay(server_address: String, room: String, password: String,
-		nickname: String, hosting: bool) -> Error:
+		nickname: String, hosting: bool, ticket: String = "") -> Error:
 	leave()
 	var clean_address := server_address.strip_edges()
 	if clean_address.is_empty():
 		return _reject("请输入中转服务器 IP。", ERR_INVALID_PARAMETER)
 	address = _relay_url(clean_address)
+	if Browser.requires_secure_relay() and not address.begins_with("wss://"):
+		return _reject("当前页面需要安全中转地址（wss://）。", ERR_INVALID_PARAMETER)
 	room_code = room.strip_edges().to_upper()
 	player_name = _clean_name(nickname)
 	is_host = hosting
@@ -115,6 +121,9 @@ func _begin_relay(server_address: String, room: String, password: String,
 	_started_at = _now()
 	_relay_auth = {"op": "create" if hosting else "join", "room": room_code,
 		"password": password.left(128), "name": player_name}
+	if not ticket.is_empty():
+		# A Center-signed room ticket; the relay ignores it when it runs open.
+		_relay_auth["ticket"] = ticket.strip_edges().left(4096)
 	_relay = WebSocketPeer.new()
 	_relay.inbound_buffer_size = MAX_PACKET_BYTES * 2
 	_relay.outbound_buffer_size = MAX_PACKET_BYTES * 2
@@ -583,12 +592,13 @@ func _wire_text(value: Variant, fallback: String = "") -> String:
 
 func _relay_url(value: String) -> String:
 	var result := value
-	if not result.begins_with("ws://") and not result.begins_with("wss://"):
+	var explicit_scheme := result.begins_with("ws://") or result.begins_with("wss://")
+	if not explicit_scheme:
 		result = "ws://" + result
 	var scheme_end := result.find("://") + 3
 	var path_start := result.find("/", scheme_end)
 	var authority := result.substr(scheme_end) if path_start < 0 else result.substr(scheme_end, path_start - scheme_end)
-	if not authority.contains(":"):
+	if not explicit_scheme and not authority.contains(":"):
 		result = result.substr(0, scheme_end) + authority + ":%d" % RELAY_PORT + ("" if path_start < 0 else result.substr(path_start))
 	if path_start < 0 or result.ends_with("/"):
 		result = result.trim_suffix("/") + "/ws"
@@ -599,7 +609,11 @@ func _friendly_error(code: String, fallback: String) -> String:
 	return String({"room_exists": "房间码已被占用，请换一个或留空自动生成。",
 		"room_not_found": "未找到房间，请核对房间码。", "wrong_password": "房间密码不正确。",
 		"room_full": "房间已满，最多四名守墨人。", "host_left": "房主已离开。",
-		"invalid_room": "房间码需为 4–16 位英文字母或数字。"}.get(code, fallback))
+		"invalid_room": "房间码需为 4–16 位英文字母或数字。",
+		"login_required": "联机需要登录 Paper 账号；单人试玩不受影响。",
+		"ticket_invalid": "登录凭证无效，请重新登录 Paper 账号。",
+		"ticket_expired": "登录凭证已过期，请重试。",
+		"account_mismatch": "登录状态已变化，请重试。"}.get(code, fallback))
 
 
 func _now() -> float:

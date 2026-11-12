@@ -1,4 +1,4 @@
-"""Publish only a complete, checksummed set of native release packages."""
+"""Publish only a complete, checksummed set of native and Web release packages."""
 from __future__ import annotations
 
 import argparse
@@ -31,6 +31,13 @@ def main() -> None:
                 raise ValueError(f"Checksum mismatch: {archive.name}")
             files.extend([archive, sidecar])
             checksums.append(f"{digest}  {archive.name}")
+    web = directory / f"InkTide-{version}-Web.zip"
+    web_sidecar = directory / f"{web.name}.sha256.txt"
+    web_digest = hashlib.sha256(web.read_bytes()).hexdigest()
+    if web_sidecar.read_text(encoding="utf-8-sig").strip() != f"{web_digest}  {web.name}":
+        raise ValueError(f"Checksum mismatch: {web.name}")
+    files.extend([web, web_sidecar])
+    checksums.append(f"{web_digest}  {web.name}")
     combined = directory / "SHA256SUMS.txt"
     combined.write_text("\n".join(checksums) + "\n", encoding="utf-8")
     files.append(combined)
@@ -48,7 +55,7 @@ def main() -> None:
     subprocess.run(["gh", "release", "upload", args.tag, *map(str, files), "--clobber"], check=True)
     if is_draft:
         subprocess.run(["gh", "release", "edit", args.tag, "--draft=false"], check=True)
-    print(f"Published four verified packages for {args.tag}")
+    print(f"Published five verified packages for {args.tag}")
 
 
 if __name__ == "__main__":

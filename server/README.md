@@ -47,8 +47,24 @@ sudo ufw allow 7778/tcp
 | `-addr` | `:7778` | HTTP / WebSocket 监听地址 |
 | `-max-rooms` | `256` | 同时存在的房间上限 |
 | `-max-connections` | `1024` | 包括握手中的连接总上限 |
+| `-require-login` | `off`（或环境变量 `INK_TIDE_REQUIRE_LOGIN`） | 房间账号校验：`off` 不校验、`browser` 只校验会发送 `Origin` 的浏览器客户端、`all` 校验所有客户端 |
 | `-tls-cert` | 空 | 可选 PEM 证书 |
 | `-tls-key` | 空 | 可选 PEM 私钥，需与证书一起提供 |
+
+### Paper 账号校验
+
+Paper 的墨潮页面只向已登录玩家开放联机房间。Center 使用共享密钥签发短时 `ticket`，中转用 `INK_TIDE_TICKET_SECRET`（64 位十六进制，两处必须相同）验证，不需要数据库或回调 Center：
+
+```sh
+INK_TIDE_TICKET_SECRET=<64 位十六进制> ./ink-tide-relay-linux-amd64 -addr 127.0.0.1:7778 -require-login=browser
+```
+
+- `browser`：Godot Web 客户端使用浏览器 WebSocket，握手一定带 `Origin`，因此必须带有效 `ticket`；桌面原生客户端不发送 `Origin`，保留原有局域网与公网中转玩法。
+- `all`：所有客户端都必须带 `ticket`，适合只部署 Web 游戏、确实不提供桌面中转的情况。
+- `off`：完全不校验，仅用于本机联调。未设置密钥时启动会被拒绝（`browser`/`all`）。
+
+已验证票面的昵称会覆盖客户端自报的 `name`，因此浏览器玩家无法伪装成其他昵称。票据有效期由 Center 决定（当前 300 秒），只用于握手，不影响对局时长。手工构造 WebSocket 客户端并伪造 `Origin` 不属于本层的防护目标；需要更强约束时应对接权威服务器或边缘网关。
+
 
 有可信域名证书时可直接提供 TLS 证书：
 
@@ -85,13 +101,13 @@ WantedBy=multi-user.target
 创建房间（`room` 为空时自动生成六位无歧义大写房间码；也允许 4–16 位英文字母/数字自定义房间码）：
 
 ```json
-{"op":"create","room":"","name":"守夜人","password":"可选密码"}
+{"op":"create","room":"","name":"守夜人","password":"可选密码","ticket":"可选 · Paper 账号票据"}
 ```
 
 加入：
 
 ```json
-{"op":"join","room":"ABC234","name":"同行者","password":"可选密码"}
+{"op":"join","room":"ABC234","name":"同行者","password":"可选密码","ticket":"可选 · Paper 账号票据"}
 ```
 
 成功后首个服务消息总是 `welcome`：
@@ -115,7 +131,7 @@ WantedBy=multi-user.target
 
 **房客只允许 `to:1`**；只有房主可以广播权威状态。服务器不执行游戏逻辑，也不接受客户端指定的发送者身份。不同房间永不互相转发。
 
-失败消息为 `{"op":"error","code":"room_full","message":"..."}`。握手失败随后断开；对局期间无效目标或越权消息被拒绝，连接仍保留。错误码包括 `handshake_required`、`bad_json`、`text_required`、`invalid_room`、`password_too_long`、`room_exists`、`room_not_found`、`wrong_password`、`room_full`、`server_full`、`server_closing`、`unknown_op`、`invalid_data`、`invalid_target`、`host_only`、`peer_not_found`、`room_closed`。
+失败消息为 `{"op":"error","code":"room_full","message":"..."}`。握手失败随后断开；对局期间无效目标或越权消息被拒绝，连接仍保留。错误码包括 `handshake_required`、`bad_json`、`text_required`、`invalid_room`、`password_too_long`、`room_exists`、`room_not_found`、`wrong_password`、`room_full`、`server_full`、`server_closing`、`login_required`、`ticket_invalid`、`ticket_expired`、`unknown_op`、`invalid_data`、`invalid_target`、`host_only`、`peer_not_found`、`room_closed`。
 
 限制：每帧最大 256 KiB；每连接最多缓存 128 个待发消息；服务每 15 秒发送 WebSocket Ping，45 秒无数据/Pong断开；写超时 5 秒。无在线玩家的房间不保留，服务器重启后所有房间消失。此服务不提供匹配、账号、存档、房主迁移或游戏反作弊。
 
@@ -136,6 +152,6 @@ CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o .
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o ../dist/server/ink-tide-relay-linux-amd64 .
 ```
 
-测试覆盖：带密码创建/加入、Unicode名字、四人容量与重连、新peer ID、身份防伪、房主广播/客人输入、客人越权拒绝、无效目标、房主断线清房、房间上限、超大帧断开、握手超时、健康检查。
+测试覆盖：带密码创建/加入、Unicode名字、四人容量与重连、新peer ID、身份防伪、房主广播/客人输入、客人越权拒绝、无效目标、房主断线清房、房间上限、超大帧断开、握手超时、健康检查、票据签名/过期/篡改、浏览器强制登录、桌面保留中转、`all` 严格模式。
 
 官方参考：Go 的 `net/http` / `httptest`、Gorilla WebSocket 的 `doc.go` 并发与控制帧说明。第三方许可见 `THIRD_PARTY_LICENSES.md`。
